@@ -94,9 +94,9 @@ public class DATAutomaton<V> implements Automaton<V> {
 
 
     @Override
-    public void parse(CharSequence text, MatchListener<V> listener) {
+    public void parseText(CharSequence text, MatchHandler<V> handler) {
 
-        if(text == null || listener == null) {
+        if(text == null || handler == null) {
             return;
         }
 
@@ -148,7 +148,7 @@ public class DATAutomaton<V> implements Automaton<V> {
 
                     Tuple<String, V> datum = this.data[index];
                     int start = calcStart(anchorDeque, i, datum.first.length());
-                    boolean isContinue = listener.onMatch(start, i + 1, datum.first, datum.second);
+                    boolean isContinue = handler.onMatch(start, i + 1, datum.first, datum.second);
                     if(!isContinue) return;
                 }
             }
@@ -157,11 +157,11 @@ public class DATAutomaton<V> implements Automaton<V> {
     }
 
 
-    public List<Emit<V>> parse(CharSequence text) {
+    public List<Emit<V>> parseText(CharSequence text) {
 
         List<Emit<V>> results = new LinkedList<>();
 
-        MatchListener<V> listener = new MatchListener<V>() {
+        MatchHandler<V> listener = new MatchHandler<V>() {
             @Override
             public boolean onMatch(int start, int end, String key, V value) {
                 Emit<V> emit = new Emit<>(key, start, end, value);
@@ -170,7 +170,7 @@ public class DATAutomaton<V> implements Automaton<V> {
             }
         };
 
-        parse(text, listener);
+        parseText(text, listener);
 
         return results;
     }

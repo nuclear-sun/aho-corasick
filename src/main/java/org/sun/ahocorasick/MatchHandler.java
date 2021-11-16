@@ -1,6 +1,6 @@
 package org.sun.ahocorasick;
 
-interface MatchListener<V> {
+interface MatchHandler<V> {
 
     /**
      * Callback on matching a keyword

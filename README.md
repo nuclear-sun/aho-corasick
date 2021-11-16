@@ -1,12 +1,12 @@
 # About
-Double-array based aho-corasick automaton implementation, inspired by 
+A double-array based aho-corasick automaton implementation, inspired by 
 * https://www.linux.thai.net/~thep/datrie/
 * https://github.com/robert-bor/aho-corasick
 
-Typically, an aho-corasick automaton consists of 
-1. trie nodes
+Typically, an aho-corasick automaton is mainly a trie, whose nodes are modified and consists of
+1. goto table
 2. failure pointer
-3. outputs
+3. output table
 
 This implementation fuse all above elements into the double array, resulting excellent query performance, especially for large documents.
 
@@ -37,27 +37,29 @@ In above two cases, `allAll` and `putAll` is also provided to support collection
 
 ### 1. Generally collect all keywords encountered
 ```
-List<Emit<V>> list = automaton.parse(text); 
+List<Emit<V>> list = automaton.parseText(text); 
 ```
 
 ### 2. Uniform callback machenism
 
 ```
-MatchLister<V> listener = new MatchListener<V> {
+MatchHandler<V> handler = new MatchHandler<V> {
   boolean onMatch(int start, int end, String key, V value) {
     // do something
     // ...
     return true;   // return false if you want to stop parseing half way
   }
 };
-automaton.parse(str, listener);
+automaton.parseText(str, handler);
 ```
 
 ### 3. Stop parsing half way
 If you want to stop parsing half way, say, test if a input document contains the word "demon" or not, and unnecessary to traverse the whole document, you can
 ```
-boolean hasDemon = false;
-MatchLister<V> listener = new MatchListener<V> {
+MatchHandler<V> handler = new MatchHandler<V> {
+
+  boolean hasDemon = false;
+  
   boolean onMatch(int start, int end, String key, V value) {
     if("demon".equals(key)) {
        hasDemon = true;
@@ -66,9 +68,9 @@ MatchLister<V> listener = new MatchListener<V> {
     return true;
   }
 };
-automaton.parse(document, listener); 
+automaton.parseText(document, handler); 
 ```
-When the listener returns false, the parse function will find it and return immediately.
+When the handler returns false, the parse function will find it and return immediately.
 
 
 ### 4. Skip some characters
@@ -100,7 +102,7 @@ CharSequence convertStr = new CharSequence() {
     }
 };
 
-List<Emit<V>> list = automaton.parse(convertStr);
+List<Emit<V>> list = automaton.parseText(convertStr);
 ```
 
 ### 5. Convert characters before parsing
@@ -136,7 +138,19 @@ class LowerCaseCS implements CharSequence {
 
 }
 
-automaton.parse(new LowerCaseCS(text));
+automaton.parseText(new LowerCaseCS(text));
 
 ```
 
+# Performance
+I tested the following cases on my laptop, Apple MacBook Pro 15.4 with 2.2Hz Intel Core i7, 16G memory.
+
+| text length | query avg (ns) | query tp99 (ns) |
+| ----------: | --------------:| ---------------:|
+| 300 ~ 600   | 15077          | 53644           |
+| 10k ~ 30k   | 714744         | 2162130         |
+| 10m         | 704315370      | 704315370       |
+| 20m         | 178099589      | 224774130       |
+
+The table above shows that this implementation can process huge documents whose size of characters exceeds 
+tens of millions within 1 second. 
