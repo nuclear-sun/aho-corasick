@@ -154,3 +154,13 @@ I tested the following cases on my laptop, Apple MacBook Pro 15.4 with 2.2Hz Int
 
 The table above shows that this implementation can process huge documents whose size of characters exceeds 
 tens of millions within 1 second. 
+
+A more dedicated benchmark compares average time consumption (nano seconds) for two implementation:
+
+| Log10(text_length) | Linking Implementation | Double-Array Implementation |
+| ----------: | --------------:| ---------------:|
+| 1   | 5511          | 3609           |
+| 2   | 19055         | 4918           |
+| 3   | 253760        | 16289          |
+| 4   | 1674961       | 132835         |
+
