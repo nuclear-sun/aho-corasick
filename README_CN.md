@@ -1,30 +1,30 @@
-English | [中文](README_CN.md)
+[English](README.md) | 中文
 
-# About
-A double-array based aho-corasick automaton implementation, inspired by 
+# 关于
+基于双数组的AC自动机实现,收到下面两个项目的启发完成
 * https://www.linux.thai.net/~thep/datrie/
 * https://github.com/robert-bor/aho-corasick
 
-Typically, an aho-corasick automaton is mainly a trie, whose nodes are modified and consists of
-1. goto table
-2. failure pointer
-3. output table
+通常,一个 AC自动机是一个 trie 结构,节点状态由下面几种结构修改
+1. goto 表(goto table)
+2. 失败指针(failure pointer)
+3. 输出表(output table)
 
-This implementation fuse all above elements into the double array, resulting excellent query performance, especially for large documents.
+这个实现在双数组上重用了上面所有的元素,达到了卓越的查询性能,尤其是对大文件的查询.
 
-However, the process of building such data structure is longer than implementations of linked nodes. Therefore it is suitable for scenario where build once, query all the time.
+然而,构造这个数据结构(Trie)的过程比链接表要慢,因此,这个实现更适用于一次构建,多次查询的场景.
 
-# Usage
-## Build the Automaton
+# 用法
+## 构造自动机
 ```
-// build process
+// 构造过程
 DATAutomaton.Builder builder = DATAutomaton.builder();
 builder.add("he")
         .add("she")
         .add("say");
 Automaton automaton = builder.build();
 ```
-If you want to attach each keyword with a generic object
+如果需要对每个关键词关联一个对象
 ```
 DATAutomaton.Builder<Object> builder = DATAutomaton.builder();
 builder.put("he", obj1)
@@ -32,31 +32,30 @@ builder.put("he", obj1)
        .put("say", obj3);
 Automaton<Object> automaton = builder.build();
 ```
-In above two cases, `addAll` and `putAll` is also provided to support collections.
+也可以使用 `addAll`, `putAll` 一次添加一组关键词.
 
+## 查询自动机
 
-## Query the Automaton
-
-### 1. Generally collect all keywords encountered
+### 1. 收集所有命中的关键词
 ```
 List<Emit<V>> list = automaton.parseText(text); 
 ```
 
-### 2. Uniform callback machenism
+### 2. 为匹配命中配置回调机制
 
 ```
 MatchHandler<V> handler = new MatchHandler<V> {
   boolean onMatch(int start, int end, String key, V value) {
-    // do something
+    // 处理逻辑
     // ...
-    return true;   // return false if you want to stop parseing half way
+    return true;   // 如果希望命中后停止解析,请 return false
   }
 };
 automaton.parseText(text, handler);
 ```
 
-### 3. Stop parsing half way
-If you want to stop parsing half way, say, test if a input document contains the word "demon" or not, and unnecessary to traverse the whole document, you can
+### 3. 中途停止解析
+如果希望中途停止解析,例如,测试一个输入文档是否包含 "demon",这并不需要遍历整个文档,只需要在发现 "demon"时停止.
 ```
 MatchHandler<V> handler = new MatchHandler<V> {
 
@@ -72,12 +71,12 @@ MatchHandler<V> handler = new MatchHandler<V> {
 };
 automaton.parseText(document, handler); 
 ```
-When the handler returns false, the parse function will find it and return immediately.
+当 handler 返回 false, parse 函数将在找到这个关键词后立即返回.
 
 
-### 4. Skip some characters
-Sometimes, the query text may contain special chars you want to ignore during parsing, for example:
-"sh##e" needs to be matched as "she" if it is added during building process, you can convert special chars to '\0', because '\0' will be skipped during parsing.
+### 4. 跳过一些字符
+有时,查询字符串包含一些你希望忽略的字符,例如:
+"sh##e" 需要被当作 "she" 来处理,而你在构造自动机时添加了关键词 "she",你可以把特殊字符转换为 '\0', 因为 '\0'在解析时会被跳过.
 ```
 String str = "sh##e";
 
@@ -107,8 +106,8 @@ CharSequence convertStr = new CharSequence() {
 List<Emit<V>> list = automaton.parseText(convertStr);
 ```
 
-### 5. Convert characters before parsing
-Overwrite `charAt` as above. Say, you are in case-insensitive situation:
+### 5. 在解析前转换字符
+像上面一样重载 `charAt` 函数. 例如,对于大小写不敏感的场景,可以像下面这样做:
 ```
 class LowerCaseCS implements CharSequence {
 
@@ -132,7 +131,7 @@ class LowerCaseCS implements CharSequence {
         return ch;
     }
 
-    // this method will not be used, it is ok with no implementation
+    // 这个方法不会被使用,不实现它是可以的
     @Override
     public CharSequence subSequence(int start, int end) {
         return null;
@@ -144,8 +143,8 @@ automaton.parseText(new LowerCaseCS(text));
 
 ```
 
-# Performance
-I tested the following cases on my laptop, Apple MacBook Pro 15.4 with 2.2Hz Intel Core i7, 16G memory.
+# 性能
+我在我的笔记本上测试了性能,我的机器配置为 Apple MacBook Pro 15.4, CPU:2.2Hz Intel Core i7, 内存:16G, 结果如下:
 
 | text length | query avg (ns) | query tp99 (ns) |
 | ----------: | --------------:| ---------------:|
@@ -154,10 +153,9 @@ I tested the following cases on my laptop, Apple MacBook Pro 15.4 with 2.2Hz Int
 | 10m         | 704315370      | 704315370       |
 | 20m         | 178099589      | 224774130       |
 
-The table above shows that this implementation can process huge documents whose size of characters exceeds 
-tens of millions within 1 second. 
+上表表明,这个实现可以在1秒内查询千万级字符.
 
-A more dedicated benchmark compares average time consumption (nano seconds) for two implementation:
+一个更专业的基准测试比较了两种实现(链接表/双数组)的查询用时(纳秒)
 
 | Log10(text_length) | Linking Implementation | Double-Array Implementation |
 | ----------: | --------------:| ---------------:|
