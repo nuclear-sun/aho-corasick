@@ -18,12 +18,17 @@ public class DATAutomaton<V> implements Automaton<V> {
     // redundant data
     private final int reserveLength;
 
-    private DATAutomaton(int[] base, int[] check, Tuple<String, V>[] data, int stateCount) {
+    // controls
+    private final boolean interruptable;
+
+    private DATAutomaton(int[] base, int[] check, Tuple<String, V>[] data, int stateCount, boolean interruptable) {
         this.base = base;
         this.check = check;
         this.data = data;
         this.stateCount = stateCount;
         this.reserveLength = (stateCount << 1) + 1;
+
+        this.interruptable = interruptable;
     }
 
     private int nextState(int currState, char ch) {
@@ -152,6 +157,8 @@ public class DATAutomaton<V> implements Automaton<V> {
                     if(!isContinue) return;
                 }
             }
+
+            if(this.interruptable && Thread.currentThread().isInterrupted()) return;
         }
 
     }
@@ -193,6 +200,10 @@ public class DATAutomaton<V> implements Automaton<V> {
 
     public int getKeywordSize() {
         return data.length;
+    }
+
+    public boolean getInterruptable() {
+        return this.interruptable;
     }
 
     private int countFreeSlots() {
@@ -246,6 +257,8 @@ public class DATAutomaton<V> implements Automaton<V> {
 
         private int stateCount;
 
+        // controls
+        private boolean interruptable = false;
 
         // temp
         private Trie trie;
@@ -280,6 +293,11 @@ public class DATAutomaton<V> implements Automaton<V> {
             return this;
         }
 
+        public Builder<V> setInterruptable(boolean interruptable) {
+            this.interruptable = interruptable;
+            return this;
+        }
+
         public DATAutomaton<V> build() {
 
             prepareData();
@@ -288,7 +306,7 @@ public class DATAutomaton<V> implements Automaton<V> {
             initDoubleArray();
             placeAllStateInfo();
 
-            return new DATAutomaton<V>(base, check, data, stateCount);
+            return new DATAutomaton<V>(base, check, data, stateCount, interruptable);
         }
 
 
