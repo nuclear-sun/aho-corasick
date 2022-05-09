@@ -44,4 +44,19 @@ public class Emit<V> implements Comparable<Emit<V>> {
         return value == null ? temp : temp + "=" + value;
     }
 
+    public String getKeyword() {
+        return keyword;
+    }
+
+    public int getStart() {
+        return start;
+    }
+
+    public int getEnd() {
+        return end;
+    }
+
+    public V getValue() {
+        return value;
+    }
 }

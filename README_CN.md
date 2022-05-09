@@ -143,6 +143,24 @@ automaton.parseText(new LowerCaseCS(text));
 
 ```
 
+## 其他特性
+### 线程中断
+有时中断查询过程是有必要的，如超时取消，关机等，可以按照如下方式设置：
+```java
+DATAutomaton.Builder builder = DATAutomaton.builder();
+builder.setInterruptable(true)  // 设置可以被中断
+        .add("he")
+        .add("she")
+        .add("say");
+Automaton automaton = builder.build();
+```
+`setInterruptable` 方法表示该自动机是否可以监听线程中断信号。如果设置为 true（默认为 false）, 当线程被中断时会停止查询（线程中断状态会被保留）。
+在另一个线程中，可以这样中断该自动机：
+```java
+t1.interrupt(); // 假定该自动机工作的线程为 t1
+```
+
+
 # 性能
 我在我的笔记本上测试了性能,我的机器配置为 Apple MacBook Pro 15.4, CPU:2.2Hz Intel Core i7, 内存:16G, 结果如下:
 

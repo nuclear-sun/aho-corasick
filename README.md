@@ -144,6 +144,24 @@ automaton.parseText(new LowerCaseCS(text));
 
 ```
 
+## Other Features
+### Thread Interruption
+It is sometimes necessary to stop parsing even though the process has not complete yet, such as canceled query, shutdown:
+```java
+DATAutomaton.Builder builder = DATAutomaton.builder();
+builder.setInterruptable(true)
+        .add("he")
+        .add("she")
+        .add("say");
+Automaton automaton = builder.build();
+```
+The `setInterruptable` method indicates whether this automaton listens on thread interruption:
+if set true(default false), the automaton will stop parsing on thread interrupted(thread interruption status not reset).
+In another thread, you can interrupt it explicitly:
+```java
+t1.interrupt(); // assume that the automaton works in thread t1.
+```
+
 # Performance
 I tested the following cases on my laptop, Apple MacBook Pro 15.4 with 2.2Hz Intel Core i7, 16G memory.
 
