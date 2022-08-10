@@ -2,9 +2,9 @@ package org.sun.ahocorasick;
 
 import java.util.*;
 
-class Trie {
+class Trie<V> {
 
-    private State root;
+    private State<V> root;
 
     private int stateCount;
 
@@ -18,7 +18,7 @@ class Trie {
 
     State addKeyword(final String keyword) {
 
-        State currState = root;
+        State<V> currState = root;
         for (int i = 0, len = keyword.length(); i < len; i++) {
 
             char ch = keyword.charAt(i);
@@ -45,7 +45,7 @@ class Trie {
         root.setOrdinal(ordinal++);
 
         Queue<State> queue = new LinkedList<>();
-        Collection<State> directChildren = root.getSuccess().values();
+        Collection<State<V>> directChildren = root.getSuccess().values();
 
         for (State child : directChildren) {
             child.setFailure(root);

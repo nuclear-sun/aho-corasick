@@ -3,17 +3,19 @@ package org.sun.ahocorasick;
 import java.util.HashMap;
 import java.util.Map;
 
-class State {
+class State<V> {
 
     private int ordinal;
 
     private String keyword;
 
-    private Map<Character, State> success;
+    private Map<Character, State<V>> success;
 
     private State failure;
 
     private State prevWordState;
+
+    private V payload;
 
     public State() {
         this.success = new HashMap<>();
@@ -35,7 +37,7 @@ class State {
         return ordinal;
     }
 
-    public Map<Character, State> getSuccess() {
+    public Map<Character, State<V>> getSuccess() {
         return this.success;
     }
 
@@ -54,4 +56,13 @@ class State {
     public State getPrevWordState() {
         return prevWordState;
     }
+
+    public V getPayload() {
+        return payload;
+    }
+
+    public void setPayload(V payload) {
+        this.payload = payload;
+    }
+
 }

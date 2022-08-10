@@ -4,22 +4,22 @@ import java.util.*;
 
 public class DATAutomaton<V> implements Automaton<V> {
 
-    private static final int MAX_KEYWORD_LENGTH = 1000;
-    private static final int ANCHOR_DEQUE_CLEAN_THRESHOLD = 20;
+    protected static final int MAX_KEYWORD_LENGTH = 1000;
+    protected static final int ANCHOR_DEQUE_CLEAN_THRESHOLD = 20;
 
-    private final int[] base;
+    protected final int[] base;
 
-    private final int[] check;
+    protected final int[] check;
 
-    private final Tuple<String, V>[] data;
+    protected final Tuple<String, V>[] data;
 
-    private final int stateCount;
+    protected final int stateCount;
 
     // redundant data
-    private final int reserveLength;
+    protected final int reserveLength;
 
     // controls
-    private final boolean interruptable;
+    protected final boolean interruptable;
 
     private DATAutomaton(int[] base, int[] check, Tuple<String, V>[] data, int stateCount, boolean interruptable) {
         this.base = base;
@@ -31,7 +31,28 @@ public class DATAutomaton<V> implements Automaton<V> {
         this.interruptable = interruptable;
     }
 
-    private int nextState(int currState, char ch) {
+    protected DATAutomaton(DATAutomaton that) {
+        this.base = that.base;
+        this.check = that.check;
+        this.data = that.data;
+        this.stateCount = that.stateCount;
+        this.reserveLength = that.reserveLength;
+        this.interruptable = that.interruptable;
+    }
+
+    /**
+     * next success state when matching
+     * @return next success state or -1 when fail
+     */
+    protected int childState(int currState, char ch) {
+        int index = base[currState] + ch;
+        if(index >= reserveLength && index < base.length && check[index] == currState) {
+            return base[index];
+        }
+        return -1;
+    }
+
+    protected int nextState(int currState, char ch) {
 
         int nextState = 0, index;
 
@@ -58,7 +79,7 @@ public class DATAutomaton<V> implements Automaton<V> {
      * @param state the state to study
      * @return index for outer resource
      */
-    private List<Integer> collectWords(final int state) {
+    protected List<Integer> collectWords(final int state) {
 
         List<Integer> collector = null;
 
@@ -79,7 +100,7 @@ public class DATAutomaton<V> implements Automaton<V> {
     }
 
     // open for test
-    static int calcStart(final Deque<Tuple<Integer, Integer>> anchorQueue, final int end, final int wordLength) {
+    public static int calcStart(final Deque<Tuple<Integer, Integer>> anchorQueue, final int end, final int wordLength) {
 
         int ignoreChars = 0;
 
@@ -233,18 +254,6 @@ public class DATAutomaton<V> implements Automaton<V> {
             }
         }
     }
-
-    private static class Tuple<V1, V2> {
-
-        private V1 first;
-        private V2 second;
-
-        public Tuple(V1 first, V2 second) {
-            this.first = first;
-            this.second = second;
-        }
-    }
-
 
     public static class Builder<V> {
 
@@ -469,7 +478,8 @@ public class DATAutomaton<V> implements Automaton<V> {
                 // 4. place success table
                 placeSuccess(state);
 
-                for (State child : state.getSuccess().values()) {
+                Map<Character, State> success = state.getSuccess();
+                for (State child: success.values()) {
                     queue.offer(child);
                 }
             }
