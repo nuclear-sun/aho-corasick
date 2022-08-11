@@ -11,7 +11,7 @@ public class HanziSimilarity {
 
     private Map<Character, String> similarTable;
 
-    public HanziSimilarity() {
+    private HanziSimilarity() {
 
         InputStream resourceAsStream = HanziSimilarity.class.getResourceAsStream("/shapeSim.txt");
 
@@ -62,6 +62,12 @@ public class HanziSimilarity {
 
     public String getSimilarChars(char ch) {
         return similarTable.get(ch);
+    }
+
+    private static final HanziSimilarity instance = new HanziSimilarity();
+
+    public static HanziSimilarity getInstance() {
+        return instance;
     }
 
 }

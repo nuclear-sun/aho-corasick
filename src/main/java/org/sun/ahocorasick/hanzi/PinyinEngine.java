@@ -49,7 +49,7 @@ public class PinyinEngine {
                 String pinyin = keyValue[0];
 
                 PinyinInfo pinyinInfo = new PinyinInfo();
-                pinyinInfo.setPinyin(pinyin);
+                pinyinInfo.setText(pinyin);
                 pinyinInfo.setId(i++);
 
                 builder.put(pinyin, pinyinInfo);
@@ -83,17 +83,15 @@ public class PinyinEngine {
      * @param text
      * @return
      */
-    public String parseFirstGreedyPinyin(String text) {
-        if(text == null) {
+    public PinyinInfo parseFirstGreedyPinyin(String text) {
+        if(text == null || text.isEmpty()) {
             return null;
-        }
-        if(text.isEmpty()) {
-            return "";
         }
 
         class FirstGreedyMatchHandler implements MatchHandler<PinyinInfo> {
 
             private int mostRight = 1;
+            private PinyinInfo firstGreedyPinyin;
 
             @Override
             public boolean onMatch(int start, int end, String key, PinyinInfo value) {
@@ -102,13 +100,14 @@ public class PinyinEngine {
                 } else {
                     if(start == 0 && end > mostRight) {
                         mostRight = end;
+                        firstGreedyPinyin = value;
                     }
                     return true;
                 }
             }
 
-            public String getFirstGreedyMeet() {
-                return text.substring(0, mostRight);
+            public PinyinInfo getFirstGreedyMeet() {
+                return this.firstGreedyPinyin;
             }
         }
 
@@ -119,6 +118,22 @@ public class PinyinEngine {
 
     public PinyinInfo getPinyinInfoById(int id) {
         return pinyinTable.get(id);
+    }
+
+    public PinyinInfo getInfoByPinyin(String pinyin) {
+
+        PinyinInfo info = parseFirstGreedyPinyin(pinyin);
+        if(info == null) {
+            return null;
+        }
+
+        String text = info.getText();
+
+        if(text.length() == pinyin.length()) {
+            return info;
+        }
+
+        return null;
     }
 
     public List<Emit<PinyinInfo>> parsePinyin(CharSequence text) {

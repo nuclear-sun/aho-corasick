@@ -1,8 +1,9 @@
 package org.sun.ahocorasick;
 
 import java.util.*;
+import java.util.function.Consumer;
 
-class Trie<V> {
+public class Trie<V> {
 
     private State<V> root;
 
@@ -110,6 +111,27 @@ class Trie<V> {
         }
 
         this.stateCount = ordinal - 1;
+    }
+
+    public void traverse(Consumer<State<V>> consumer) {
+
+        Queue<State<V>> queue = new LinkedList<>();
+
+        queue.offer(this.root);
+
+        while (!queue.isEmpty()) {
+            State<V> item = queue.poll();
+
+            try {
+                consumer.accept(item);
+            } catch (Exception e) {
+                throw e;
+            }
+
+            for (State<V> childState : item.getSuccess().values()) {
+                queue.offer(childState);
+            }
+        }
     }
 
 }

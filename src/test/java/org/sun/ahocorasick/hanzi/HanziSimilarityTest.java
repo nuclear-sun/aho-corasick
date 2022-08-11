@@ -12,7 +12,7 @@ public class HanziSimilarityTest {
 
     @BeforeClass
     void setUp() {
-        hanziSimilarity = new HanziSimilarity();
+        hanziSimilarity = HanziSimilarity.getInstance();
     }
 
     @Test

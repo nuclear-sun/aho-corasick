@@ -15,7 +15,9 @@ public class PinyinSimilarity {
 
     private Map<String, List<String>> similarTable;
 
-    public PinyinSimilarity() {
+    private final PinyinEngine pinyinEngine = PinyinEngine.getInstance();
+
+    private PinyinSimilarity() {
 
         InputStream resourceAsStream = PinyinSimilarity.class.getResourceAsStream("/pinyinSim.txt");
 
@@ -64,8 +66,6 @@ public class PinyinSimilarity {
         }
     }
 
-
-
     public List<String> getSimilarPinyins(String pinyin) {
 
         List<String> similarPinyins = this.similarTable.get(pinyin);
@@ -89,7 +89,7 @@ public class PinyinSimilarity {
                         mostRight = end;
                     }
                     if(start == 0) {
-                        commonPrefixPinyinList.add(value.getPinyin());
+                        commonPrefixPinyinList.add(value.getText());
                     }
                     return true;
                 }
@@ -100,5 +100,30 @@ public class PinyinSimilarity {
         return commonPrefixPinyinList;
     }
 
+
+    public CharSequence getSimilarPinyinById(int pinyinId) {
+        PinyinInfo info = pinyinEngine.getPinyinInfoById(pinyinId);
+        if(info == null) {
+            return null;
+        }
+
+        String pinyin = info.getText();
+        List<String> similarPinyins = getSimilarPinyins(pinyin);
+
+        StringBuilder sb = new StringBuilder(similarPinyins.size());
+
+        for (String similarPinyin : similarPinyins) {
+            PinyinInfo similarPinyinInfo = pinyinEngine.getInfoByPinyin(similarPinyin);
+            sb.append((char) similarPinyinInfo.getId());
+        }
+        return sb.toString();
+    }
+
+
+    private static final PinyinSimilarity instance = new PinyinSimilarity();
+
+    public static PinyinSimilarity getInstance() {
+        return instance;
+    }
 
 }

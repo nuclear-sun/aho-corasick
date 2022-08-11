@@ -5,6 +5,24 @@ import java.util.Map;
 
 public class StateMetaInfo {
 
-    private Map<Character, List<Character>> shapeTransTable;
+    private int counterPartChar;
 
+    private boolean supportFuzzyMatch;
+
+
+    public int getCounterPartChar() {
+        return counterPartChar;
+    }
+
+    public void setCounterPartChar(int counterPartChar) {
+        this.counterPartChar = counterPartChar;
+    }
+
+    public boolean isSupportFuzzyMatch() {
+        return supportFuzzyMatch;
+    }
+
+    public void setSupportFuzzyMatch(boolean supportFuzzyMatch) {
+        this.supportFuzzyMatch = supportFuzzyMatch;
+    }
 }

@@ -12,7 +12,7 @@ public class PinyinSimilarityTest {
     @Test
     public void testGetSimilarPinyins() {
 
-        PinyinSimilarity pinyinSimilarity = new PinyinSimilarity();
+        PinyinSimilarity pinyinSimilarity = PinyinSimilarity.getInstance();
 
         List<String> jian = pinyinSimilarity.getSimilarPinyins("jian");
         assertEquals(jian, Arrays.asList("j", "ji"));

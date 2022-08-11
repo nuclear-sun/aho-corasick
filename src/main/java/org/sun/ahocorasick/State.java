@@ -3,7 +3,7 @@ package org.sun.ahocorasick;
 import java.util.HashMap;
 import java.util.Map;
 
-class State<V> {
+public class State<V> {
 
     private int ordinal;
 

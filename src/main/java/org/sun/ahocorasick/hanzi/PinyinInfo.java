@@ -4,7 +4,7 @@ public class PinyinInfo {
 
     private int id;
 
-    private String pinyin;
+    private String text;
 
 
     public int getId() {
@@ -15,19 +15,19 @@ public class PinyinInfo {
         this.id = id;
     }
 
-    public String getPinyin() {
-        return pinyin;
+    public String getText() {
+        return text;
     }
 
-    public void setPinyin(String pinyin) {
-        this.pinyin = pinyin;
+    public void setText(String text) {
+        this.text = text;
     }
 
     @Override
     public String toString() {
         return "PinyinInfo{" +
                 "id=" + id +
-                ", pinyin='" + pinyin + '\'' +
+                ", text='" + text + '\'' +
                 '}';
     }
 }
