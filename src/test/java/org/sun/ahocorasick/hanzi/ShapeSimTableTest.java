@@ -1,31 +1,30 @@
 package org.sun.ahocorasick.hanzi;
 
-import org.sun.ahocorasick.hanzi.HanziSimilarity;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.*;
 
-public class HanziSimilarityTest {
+public class ShapeSimTableTest {
 
-    HanziSimilarity hanziSimilarity;
+    ShapeSimTable shapeSimTable;
 
     @BeforeClass
     void setUp() {
-        hanziSimilarity = HanziSimilarity.getInstance();
+        shapeSimTable = ShapeSimTable.getInstance();
     }
 
     @Test
     public void testGetSimilarity() {
 
-        double similarity = hanziSimilarity.getSimilarity('爱', '寺');
+        double similarity = shapeSimTable.getSimilarity('爱', '寺');
         System.out.println(similarity);
 
     }
 
     @Test
     public void testGetSimilarChars() {
-        String similarChars = hanziSimilarity.getSimilarChars('习');
+        String similarChars = shapeSimTable.getSimilarChars('习');
         System.out.println(similarChars);
     }
 

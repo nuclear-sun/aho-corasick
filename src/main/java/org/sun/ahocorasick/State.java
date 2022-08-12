@@ -17,6 +17,8 @@ public class State<V> {
 
     private V payload;
 
+    private Map<String, Object> dataMap;
+
     public State() {
         this.success = new HashMap<>();
     }
@@ -63,6 +65,20 @@ public class State<V> {
 
     public void setPayload(V payload) {
         this.payload = payload;
+    }
+
+    public void putData(String key, Object data) {
+        if(dataMap == null) {
+            dataMap = new HashMap<>();
+        }
+        dataMap.put(key, data);
+    }
+
+    public Object getData(String key) {
+        if(dataMap == null) {
+            return null;
+        }
+        return dataMap.get(key);
     }
 
 }

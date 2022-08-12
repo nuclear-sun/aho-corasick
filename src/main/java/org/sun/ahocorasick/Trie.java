@@ -9,15 +9,31 @@ public class Trie<V> {
 
     private int stateCount;
 
-    Trie() {
+    private int keywordCount;
+
+    private BuildCallback<V> callback;
+
+    public Trie() {
         this.root = new State();
     }
 
-    int getStateCount() {
+    public int getStateCount() {
         return stateCount;
     }
 
-    State addKeyword(final String keyword) {
+    public int getKeywordCount() {
+        return keywordCount;
+    }
+
+    public void setCallback(BuildCallback<V> callback) {
+        this.callback = callback;
+    }
+
+    public State addKeyword(final String keyword) {
+        return putKeyword(keyword, null);
+    }
+
+    public State putKeyword(final String keyword, final V value) {
 
         State<V> currState = root;
         for (int i = 0, len = keyword.length(); i < len; i++) {
@@ -28,11 +44,18 @@ public class Trie<V> {
             if(childState == null) {
                 childState = new State();
                 currState.getSuccess().put(ch, childState);
+                if(callback != null) {
+                    callback.onStateCreated(childState, keyword);
+                }
+            }
 
+            if(callback != null) {
+                callback.onStateChecked(childState, keyword);
             }
             currState = childState;
         }
         currState.setKeyword(keyword);
+        currState.setPayload(value);
         return currState;
     }
 
@@ -40,7 +63,7 @@ public class Trie<V> {
         return this.root;
     }
 
-    void constructFailureAndPrevWordPointer() {
+    public void constructFailureAndPrevWordPointer() {
 
         int ordinal = 1;
         root.setOrdinal(ordinal++);
@@ -53,10 +76,15 @@ public class Trie<V> {
             queue.offer(child);
         }
 
+        int keywordCount = 0;
+
         while (!queue.isEmpty()) {
 
             State parentState = queue.poll();
             parentState.setOrdinal(ordinal++);
+            if(parentState.getKeyword() != null) {
+                keywordCount++;
+            }
 
             Map<Character, State> children = parentState.getSuccess();
 
@@ -111,6 +139,7 @@ public class Trie<V> {
         }
 
         this.stateCount = ordinal - 1;
+        this.keywordCount = keywordCount;
     }
 
     public void traverse(Consumer<State<V>> consumer) {

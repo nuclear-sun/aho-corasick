@@ -18,12 +18,12 @@ public class PinyinEngineTest {
     @Test
     public void testParsePinyin() {
 
-        String firstPinyin = pinyinEngine.parseFirstGreedyPinyin("jiandan");
+        String firstPinyin = pinyinEngine.parseFirstGreedyPinyin("jiandan").getText();
         assertEquals(firstPinyin, "jian");
-        String pinyin = pinyinEngine.parseFirstGreedyPinyin("xjinping");
-        assertEquals(pinyin, "x");
+        PinyinInfo pinyinInfo = pinyinEngine.parseFirstGreedyPinyin("xjinping");
+        assertNull(pinyinInfo);
 
-        assertEquals(pinyinEngine.parseFirstGreedyPinyin(""), "");
+        assertNull(pinyinEngine.parseFirstGreedyPinyin(""), null);
         assertNull(pinyinEngine.parseFirstGreedyPinyin(null));
     }
 

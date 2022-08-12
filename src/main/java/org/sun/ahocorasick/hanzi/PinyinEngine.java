@@ -83,8 +83,8 @@ public class PinyinEngine {
      * @param text
      * @return
      */
-    public PinyinInfo parseFirstGreedyPinyin(String text) {
-        if(text == null || text.isEmpty()) {
+    public PinyinInfo parseFirstGreedyPinyin(CharSequence text) {
+        if(text == null || text.length() == 0) {
             return null;
         }
 

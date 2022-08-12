@@ -7,13 +7,13 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HanziSimilarity {
+public class ShapeSimTable implements SimilarityTable {
 
     private Map<Character, String> similarTable;
 
-    private HanziSimilarity() {
+    private ShapeSimTable() {
 
-        InputStream resourceAsStream = HanziSimilarity.class.getResourceAsStream("/shapeSim.txt");
+        InputStream resourceAsStream = ShapeSimTable.class.getResourceAsStream("/shapeSim.txt");
 
         BufferedReader reader = null;
 
@@ -64,9 +64,9 @@ public class HanziSimilarity {
         return similarTable.get(ch);
     }
 
-    private static final HanziSimilarity instance = new HanziSimilarity();
+    private static final ShapeSimTable instance = new ShapeSimTable();
 
-    public static HanziSimilarity getInstance() {
+    public static ShapeSimTable getInstance() {
         return instance;
     }
 

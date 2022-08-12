@@ -11,15 +11,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class PinyinSimilarity {
+public class PinyinSimTable implements SimilarityTable {
 
     private Map<String, List<String>> similarTable;
 
     private final PinyinEngine pinyinEngine = PinyinEngine.getInstance();
 
-    private PinyinSimilarity() {
+    private PinyinSimTable() {
 
-        InputStream resourceAsStream = PinyinSimilarity.class.getResourceAsStream("/pinyinSim.txt");
+        InputStream resourceAsStream = PinyinSimTable.class.getResourceAsStream("/pinyinSim.txt");
 
         BufferedReader reader = null;
 
@@ -120,10 +120,14 @@ public class PinyinSimilarity {
     }
 
 
-    private static final PinyinSimilarity instance = new PinyinSimilarity();
+    private static final PinyinSimTable instance = new PinyinSimTable();
 
-    public static PinyinSimilarity getInstance() {
+    public static PinyinSimTable getInstance() {
         return instance;
     }
 
+    @Override
+    public CharSequence getSimilarChars(char ch) {
+        return getSimilarPinyinById(ch);
+    }
 }

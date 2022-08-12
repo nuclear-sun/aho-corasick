@@ -28,16 +28,16 @@ public class DATransformTableTest {
 
         DATransformTable transformTable = builder.build();
 
-        String result1 = transformTable.getTransformedChars(3, 'u');
+        CharSequence result1 = transformTable.getTransformedChars(3, 'u');
         assertEquals(result1, targets1);
 
-        String result2 = transformTable.getTransformedChars(10, '蜥');
+        CharSequence result2 = transformTable.getTransformedChars(10, '蜥');
         assertEquals(result2, targets2);
 
-        String result3 = transformTable.getTransformedChars(10, '蓰');
+        CharSequence result3 = transformTable.getTransformedChars(10, '蓰');
         assertEquals(result3, targets3);
 
-        String result4 = transformTable.getTransformedChars(3, '铣');
+        CharSequence result4 = transformTable.getTransformedChars(3, '铣');
         assertEquals(result4, targets4);
 
     }

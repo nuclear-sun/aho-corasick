@@ -7,12 +7,16 @@ import org.sun.ahocorasick.Tuple;
 
 import java.util.*;
 
-public class FuzzyDATAutomaton<V> extends DATAutomaton<V> {
+public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutomaton<V>{
 
     private Transformer transformer = new C2CTransformer();
 
-    protected FuzzyDATAutomaton(DATAutomaton<V> that) {
+    private PreProcessor preProcessor;
+
+    public FuzzyDATAutomaton(DATAutomaton<V> that, Transformer transformer, PreProcessor processor) {
         super(that);
+        this.transformer = transformer;
+        this.preProcessor = processor;
     }
 
     @Override
@@ -118,7 +122,6 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> {
         }
 
 
-
         Deque<Tuple<Integer, Integer>> stateStack = new ArrayDeque<>();
         Deque<Tuple<Character, Integer>> charStack = new ArrayDeque<>();
         stateStack.push(new Tuple<>(0, 0));  // 桩数据
@@ -132,7 +135,7 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> {
 
             if (stateStack.peek().first < state) {
 
-                int child = childState(state, ch);
+                int child = childState(state, preProcessor.process(ch));
 
                 if(child > 0) {                 // 成功跳转
                     i++;
@@ -210,22 +213,22 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> {
         return false;
     }
 
-    public static void main(String[] args) {
-
-        Builder builder = DATAutomaton.builder();
-        builder.add("资本主义")
-                .add("资本主×鹏")
-                .add("资本汪")
-                .add("王义鹏")
-                .add("王×鹏");
-        DATAutomaton automaton = builder.build();
-
-        FuzzyDATAutomaton fuzzyAutomaton = new FuzzyDATAutomaton<>(automaton);
-
-        String text = "资本王仪鹏";
-
-        List list = fuzzyAutomaton.fussyParseText(text);
-        System.out.println(list);
-    }
+//    public static void main(String[] args) {
+//
+//        Builder builder = DATAutomaton.builder();
+//        builder.add("资本主义")
+//                .add("资本主×鹏")
+//                .add("资本汪")
+//                .add("王义鹏")
+//                .add("王×鹏");
+//        DATAutomaton automaton = builder.build();
+//
+//        FuzzyDATAutomaton fuzzyAutomaton = new FuzzyDATAutomaton<>(automaton);
+//
+//        String text = "资本王仪鹏";
+//
+//        List list = fuzzyAutomaton.fussyParseText(text);
+//        System.out.println(list);
+//    }
 
 }

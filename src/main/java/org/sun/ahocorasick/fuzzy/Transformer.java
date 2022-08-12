@@ -12,7 +12,7 @@ public interface Transformer {
      * @param i         current index for input text
      * @param ch        current character to process
      * @param ruleIndex a char may have many convert targets, this index shows which target
-     * @return  (consumed indexes, target char)
+     * @return  (consumed indexes, target char), a negative value indicates no more transform targets
      */
     int transform(DATAutomaton automaton, int state, CharSequence text, int i, char ch, int ruleIndex);
 }

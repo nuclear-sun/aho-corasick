@@ -270,13 +270,11 @@ public class DATAutomaton<V> implements Automaton<V> {
         private boolean interruptable = false;
 
         // temp
-        private Trie trie;
+        private Trie<V> trie;
         private Map<String, V> dataMap;
-        private Map<String, Integer> invertedIndex;
 
         private Builder() {
             this.dataMap = new HashMap<>();
-            this.invertedIndex = new HashMap<>();
         }
 
 
@@ -309,7 +307,6 @@ public class DATAutomaton<V> implements Automaton<V> {
 
         public DATAutomaton<V> build() {
 
-            prepareData();
             buildTrie();
             this.stateCount = trie.getStateCount();
             initDoubleArray();
@@ -318,30 +315,31 @@ public class DATAutomaton<V> implements Automaton<V> {
             return new DATAutomaton<V>(base, check, data, stateCount, interruptable);
         }
 
+        public DATAutomaton<V> buildFromTrie(Trie<V> trie) {
 
-        private void prepareData() {
+            this.trie = trie;
+            this.stateCount = trie.getStateCount();
+            initDoubleArray();
+            placeAllStateInfo();
 
-            this.data = new Tuple[dataMap.size() + 1];
-            int i = 1;
-            for (Map.Entry<String, V> mapEntry : dataMap.entrySet()) {
-                Tuple<String, V> dataEntry = new Tuple<>(mapEntry.getKey(), mapEntry.getValue());
-                this.data[i] = dataEntry;
-                invertedIndex.put(mapEntry.getKey(), i);
-                i++;
-            }
+            this.trie = null;
 
+            return new DATAutomaton<V>(base, check, data, stateCount, interruptable);
         }
 
         private void buildTrie() {
 
-            Trie trie = new Trie();
-
-            for (int i = 1; i < data.length; i++) {
-                trie.addKeyword(data[i].first);
-            }
-
+            Trie<V> trie = new Trie<>();
+            dataMap.forEach((key, value) -> {
+                trie.putKeyword(key, value);
+            });
             trie.constructFailureAndPrevWordPointer();
             this.trie = trie;
+        }
+
+
+        public Trie<V> getTrie() {
+            return this.trie;
         }
 
         private void initDoubleArray() {
@@ -446,21 +444,25 @@ public class DATAutomaton<V> implements Automaton<V> {
             return Integer.MAX_VALUE;
         }
 
+
         private void placeAllStateInfo() {
 
-            Queue<State> queue = new LinkedList<>();
+            class IntHolder {
+                int i = 1;
+            }
+            final IntHolder holder = new IntHolder();
+            this.data = new Tuple[trie.getKeywordCount() + 1];
 
-            queue.offer(trie.getRootState());
-
-            while (!queue.isEmpty()) {
-
-                State state = queue.poll();
+            trie.traverse(state -> {
                 int ordinal = state.getOrdinal();
 
                 // 1. place outer index
                 final String keyword  = state.getKeyword();
                 if(keyword != null) {
-                    check[ordinal] = invertedIndex.get(keyword);
+                    Tuple<String, V> tuple = new Tuple<>(keyword, state.getPayload());
+                    this.data[holder.i] = tuple;
+                    check[ordinal] = holder.i;
+                    holder.i++;
                 }
 
                 // 2. place failure pointer
@@ -477,14 +479,8 @@ public class DATAutomaton<V> implements Automaton<V> {
 
                 // 4. place success table
                 placeSuccess(state);
-
-                Map<Character, State> success = state.getSuccess();
-                for (State child: success.values()) {
-                    queue.offer(child);
-                }
-            }
+            });
         }
-
 
         private void placeSuccess(State state) {
             int baseValue = findBaseValue(state);

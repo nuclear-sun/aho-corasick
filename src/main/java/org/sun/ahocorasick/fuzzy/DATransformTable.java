@@ -6,7 +6,7 @@ import java.util.*;
  * Use double array to implement a transform table:
  * (state, character) -> [c1, c2, c3, ...]
  */
-class DATransformTable {
+public class DATransformTable implements TransformTable {
     
     private int[] base;
     private int[] check;
@@ -16,7 +16,7 @@ class DATransformTable {
         this.check = check;
     }
 
-    public String getTransformedChars(int state, int originChar) {
+    public CharSequence getTransformedChars(int state, int originChar) {
 
         if(check[state] != state) {
             return null;
@@ -182,8 +182,12 @@ class DATransformTable {
                 Integer state = entry.getKey();
                 Map<Integer, CharSequence> transformMap = entry.getValue();
 
+                if(transformMap == null || transformMap.isEmpty()) {
+                    continue;
+                }
+
                 int baseAddress = findBaseAddress(state);
-                if(baseAddress == Integer.MIN_VALUE) {
+                if(baseAddress == Integer.MAX_VALUE) {
                     throw new RuntimeException("Unable to place state.");
                 }
 

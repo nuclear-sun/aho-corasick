@@ -7,17 +7,17 @@ import java.util.List;
 
 import static org.testng.Assert.*;
 
-public class PinyinSimilarityTest {
+public class PinyinSimTableTest {
 
     @Test
     public void testGetSimilarPinyins() {
 
-        PinyinSimilarity pinyinSimilarity = PinyinSimilarity.getInstance();
+        PinyinSimTable pinyinSimTable = PinyinSimTable.getInstance();
 
-        List<String> jian = pinyinSimilarity.getSimilarPinyins("jian");
+        List<String> jian = pinyinSimTable.getSimilarPinyins("jian");
         assertEquals(jian, Arrays.asList("j", "ji"));
 
-        List<String> dang = pinyinSimilarity.getSimilarPinyins("dang");
+        List<String> dang = pinyinSimTable.getSimilarPinyins("dang");
         assertEquals(dang, Arrays.asList("da", "dan", "dang"));
     }
 }
