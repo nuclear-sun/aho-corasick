@@ -42,7 +42,9 @@ public class PinyinEngine {
             bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 
             String line;
-            int i = 1;
+
+            int id = 0xF700;  // 0xF700 ~ 0xF8FF is a reversed area in unicode, use this area for pinyin code here
+
             while ((line = bufferedReader.readLine()) != null) {
 
                 String[] keyValue = line.split(":");
@@ -50,7 +52,13 @@ public class PinyinEngine {
 
                 PinyinInfo pinyinInfo = new PinyinInfo();
                 pinyinInfo.setText(pinyin);
-                pinyinInfo.setId(i++);
+
+                id++;
+                if(pinyin.length() == 1) {
+                    pinyinInfo.setId(pinyin.charAt(0));
+                } else {
+                    pinyinInfo.setId(id);
+                }
 
                 builder.put(pinyin, pinyinInfo);
                 pinyinMap.put(pinyinInfo.getId(), pinyinInfo);

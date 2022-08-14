@@ -122,9 +122,12 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutoma
         }
 
 
-        Deque<Tuple<Integer, Integer>> stateStack = new ArrayDeque<>();
+        //Deque<Tuple<Integer, Integer>> stateStack = new ArrayDeque<>();
+
+        Deque<Tuple<Integer, RuleBuffer>> stateStack = new ArrayDeque<>();
+
         Deque<Tuple<Character, Integer>> charStack = new ArrayDeque<>();
-        stateStack.push(new Tuple<>(0, 0));  // 桩数据
+        stateStack.push(new Tuple<>(0, null));  // 哨兵数据
         charStack.push(new Tuple<>('\0', -1));
 
         int state = 1;
@@ -134,6 +137,8 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutoma
         while (i < length || stateStack.size() > 1) {
 
             if (stateStack.peek().first < state) {
+
+                RuleBuffer ruleBuffer;
 
                 int child = childState(state, preProcessor.process(ch));
 
@@ -145,31 +150,34 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutoma
                     state = child;
                     tryCollect(state, i, handler);
 
-                } else if(canFussyMatch(state, ch, stateStack)) { // 是否可以模糊转换？
-                    stateStack.push(new Tuple<>(state, 0));
-                    charStack.push(new Tuple<>(ch, i));
-                } else {                                // 不支持模糊转换
-                    if(stateStack.size() == 1) {        // 模糊状态栈为空，进行失配跳转
+                } else if(!canFussyMatch(state, ch, stateStack) ||
+                        (ruleBuffer = transformer.getTransformRules(this, state, text, i, ch)) == null) { // 不支持模糊转换
+
+                    if(stateStack.size() == 1) {          // 模糊状态栈为空，进行失配跳转
                         state = nextState(state, ch);
                         i++;
                         if(i < length) {
                             ch = text.charAt(i);
                         }
                         tryCollect(state, i, handler);
-                    } else {                             // 恢复上个模糊转换状态
+                    } else {                              // 恢复上个模糊转换状态
                         state = stateStack.peek().first;
                         ch = charStack.peek().first;
                         i = charStack.peek().second;
                     }
+                } else {
+                    stateStack.push(new Tuple<>(state, ruleBuffer));
+                    charStack.push(new Tuple<>(ch, i));
                 }
+
 
             } else {
                 assert stateStack.peek().first == state;
-                int ruleIndex = stateStack.peek().second;
+                //int ruleIndex = stateStack.peek().second;
 
-                int newItem = transformer.transform(this, state, text, i, ch, ruleIndex);
+                RuleBuffer ruleBuffer = stateStack.peek().second;
 
-                if(newItem < 0) {
+                if(!ruleBuffer.hasNextRule()) {
                     stateStack.pop();
                     charStack.pop();
 
@@ -187,13 +195,18 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutoma
 
                 } else {
 
-                    char newChar = (char)newItem;
-                    int consumedChars = newItem >> 16;
+                    ruleBuffer.nextRule();
 
-                    stateStack.peek().second += 1;
-                    int child = childState(state, newChar);
-                    assert child > 0;
-                    state = child;
+                    int consumedChars = ruleBuffer.getConsumedCharNum();
+
+                    // 这个循环是因为可能存在转换为多个字符的场景，此时期望转换后的字符每个都能匹配上
+                    char newChar;
+                    while ((newChar = ruleBuffer.getNextChar()) != 0) {
+                        int child = childState(state, newChar);
+                        assert child > 0;
+                        state = child;
+                    }
+
                     i += consumedChars;
                     if(i<length) {
                         ch = text.charAt(i);
@@ -208,7 +221,7 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutoma
 
     }
 
-    boolean canFussyMatch(int state, char ch, Deque<Tuple<Integer, Integer>> stateStack) {
+    boolean canFussyMatch(int state, char ch, Deque<Tuple<Integer, RuleBuffer>> stateStack) {
         if(stateStack.size() < 3) return true;
         return false;
     }

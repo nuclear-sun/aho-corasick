@@ -23,6 +23,10 @@ public class DATransformTable implements TransformTable {
         }
 
         int firstCharTransIndex = base[state] + originChar;
+        if(firstCharTransIndex < 1 || firstCharTransIndex >= base.length || check[firstCharTransIndex] != state) {
+            return null;
+        }
+
         StringBuilder sb = new StringBuilder();
 
         int firstValue = base[firstCharTransIndex];

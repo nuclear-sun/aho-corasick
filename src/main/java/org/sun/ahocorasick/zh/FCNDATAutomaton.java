@@ -3,6 +3,8 @@ package org.sun.ahocorasick.zh;
 import org.sun.ahocorasick.*;
 import org.sun.ahocorasick.fuzzy.FuzzyAutomaton;
 import org.sun.ahocorasick.fuzzy.FuzzyDATAutomaton;
+import org.sun.ahocorasick.hanzi.HanziDict;
+import org.sun.ahocorasick.hanzi.PinyinEngine;
 
 import java.util.HashMap;
 import java.util.List;
@@ -80,6 +82,19 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
             return this;
         }
 
+        // transform origin string to pinyin coding
+        private void processBeforeBuild() {
+
+            final Map<String, WordItem<V>> pinyinCodeMap = new HashMap<>(dataMap.size());
+
+            dataMap.forEach((key, item) -> {
+                CharSequence pinyinCodes = HanziDict.getInstance().getPinyinForString(key);
+                pinyinCodeMap.put(pinyinCodes.toString(), item);
+            });
+
+            this.dataMap = pinyinCodeMap;
+        }
+
         private Trie<V> buildTrie() {
             final Trie<V> trie = new Trie<>();
             BuildCallback<V> buildCallback = new BuildCallback<V>() {
@@ -101,7 +116,7 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
 
             trie.setCallback(buildCallback);
             dataMap.forEach((key, item) -> {
-                trie.addKeyword(key);
+                trie.putKeyword(key, item.value);
             });
             trie.constructFailureAndPrevWordPointer();
             return trie;
@@ -109,6 +124,7 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
 
         public FCNDATAutomaton build() {
 
+            processBeforeBuild();
             final Trie<V> trie = buildTrie();
             DATAutomaton<V> datAutomaton = builder.buildFromTrie(trie);
 

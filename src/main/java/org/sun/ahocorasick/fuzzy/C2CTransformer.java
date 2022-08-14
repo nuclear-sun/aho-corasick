@@ -32,4 +32,9 @@ public class C2CTransformer implements Transformer {
 
         return (1 << 16) | newChar;
     }
+
+    @Override
+    public RuleBuffer getTransformRules(DATAutomaton automaton, int state, CharSequence text, int i, char ch) {
+        return null;
+    }
 }

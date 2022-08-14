@@ -1,6 +1,5 @@
 package org.sun.ahocorasick.fuzzy;
 
-import org.sun.ahocorasick.DATAutomaton;
 
 public interface PreProcessor {
 
