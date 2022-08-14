@@ -102,7 +102,7 @@ public class PinyinSimTable implements SimilarityTable {
 
 
     public CharSequence getSimilarPinyinById(int pinyinId) {
-        PinyinInfo info = pinyinEngine.getPinyinInfoById(pinyinId);
+        PinyinInfo info = pinyinEngine.getPinyinInfoByCode(pinyinId);
         if(info == null) {
             return null;
         }
@@ -113,8 +113,10 @@ public class PinyinSimTable implements SimilarityTable {
         StringBuilder sb = new StringBuilder(similarPinyins.size());
 
         for (String similarPinyin : similarPinyins) {
-            PinyinInfo similarPinyinInfo = pinyinEngine.getInfoByPinyin(similarPinyin);
-            sb.append((char) similarPinyinInfo.getId());
+            int codeByPinyin = pinyinEngine.getCodeByPinyin(similarPinyin);
+            if(codeByPinyin != 0) {
+                sb.append((char) codeByPinyin);
+            }
         }
         return sb.toString();
     }

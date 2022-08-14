@@ -8,7 +8,7 @@ public class RuleBuffer {
     private char[] data;
     private int writeIndex = 0;
     private int ruleIndex = 0;
-    private int readIndex = 1;
+    private int readIndex = -1;
     private int currRuleChars = 0;
 
 
@@ -62,7 +62,7 @@ public class RuleBuffer {
     }
 
     public char getNextChar() {
-        if(readIndex >= currRuleChars) {
+        if(readIndex - ruleIndex > currRuleChars) {
             return 0;
         }
         return data[readIndex++];

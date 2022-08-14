@@ -39,10 +39,12 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
 
         private static class WordItem<V> {
 
+            private String key;
             private V value;
             private boolean supportFussyMatch;
 
-            public WordItem(V value, boolean supportFussyMatch) {
+            public WordItem(String key, V value, boolean supportFussyMatch) {
+                this.key = key;
                 this.value = value;
                 this.supportFussyMatch = supportFussyMatch;
             }
@@ -58,7 +60,7 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
         }
 
         public Builder<V> put(String key, V value, boolean fussyMatch) {
-            dataMap.put(key, new WordItem<>(value, fussyMatch));
+            dataMap.put(key, new WordItem<>(key, value, fussyMatch));
             return this;
         }
 
@@ -66,7 +68,7 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
             builder.putAll(data);
 
             data.forEach((key, value) -> {
-                dataMap.put(key, new WordItem<>(value, fussyMatch));
+                dataMap.put(key, new WordItem<>(key, value, fussyMatch));
             });
 
             return this;
@@ -111,6 +113,9 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
 
                 @Override
                 public void onWordAdded(State<V> state, String word) {
+                    // now the keyword is pinyin coding, reset to original keyword
+                    WordItem<V> wordItem = dataMap.get(word);
+                    state.setKeyword(wordItem.key);
                 }
             };
 

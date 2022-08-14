@@ -19,7 +19,7 @@ public class FCNDATAutomatonTest {
 
         FCNDATAutomaton automaton = builder.build();
 
-        List list = automaton.fussyParseText("习禁平");
+        List list = automaton.fussyParseText("习d大");
         System.out.println(list);
     }
 

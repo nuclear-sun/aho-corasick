@@ -76,7 +76,7 @@ public class HanziDict {
                 if(info == null) {
                     stringBuilder.append(originChar);
                 } else {
-                    stringBuilder.append(info.getId());
+                    stringBuilder.append((char)info.getId());
                 }
             }
         }

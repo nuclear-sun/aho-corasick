@@ -103,7 +103,7 @@ public class PinyinEngine {
 
             @Override
             public boolean onMatch(int start, int end, String key, PinyinInfo value) {
-                if(start > 0 && end > mostRight) {
+                if(end > 6) {   // largest pinyin length
                     return false;
                 } else {
                     if(start == 0 && end > mostRight) {
@@ -124,7 +124,7 @@ public class PinyinEngine {
         return matchHandler.getFirstGreedyMeet();
     }
 
-    public PinyinInfo getPinyinInfoById(int id) {
+    public PinyinInfo getPinyinInfoByCode(int id) {
         return pinyinTable.get(id);
     }
 
@@ -142,6 +142,26 @@ public class PinyinEngine {
         }
 
         return null;
+    }
+
+    /**
+     * Get a pinyin's code (or id)
+     * @param pinyin
+     * @return pinyin's code or 0 for error
+     */
+    public int getCodeByPinyin(String pinyin) {
+        if(pinyin == null || pinyin.length() == 0) {
+            return 0;
+        }
+        if(pinyin.length() == 1) {
+            return pinyin.charAt(0);
+        }
+        PinyinInfo info = getInfoByPinyin(pinyin);
+        if(info == null) {
+            return 0;
+        } else {
+            return info.getId();
+        }
     }
 
     public List<Emit<PinyinInfo>> parsePinyin(CharSequence text) {

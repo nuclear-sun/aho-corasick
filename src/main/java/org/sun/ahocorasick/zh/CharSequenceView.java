@@ -23,7 +23,7 @@ public class CharSequenceView implements CharSequence {
 
     @Override
     public char charAt(int index) {
-        return charSequence.charAt(index - start);
+        return charSequence.charAt(index + start);
     }
 
     @Override

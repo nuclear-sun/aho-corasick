@@ -29,7 +29,36 @@ public class PinyinEngineTest {
 
     @Test
     public void testGetPinyinById() {
-        PinyinInfo pinyinInfo = pinyinEngine.getPinyinInfoById(424);
+        PinyinInfo pinyinInfo = pinyinEngine.getPinyinInfoByCode(424);
         System.out.println(pinyinInfo);
+    }
+
+    @Test
+    public void testParseFirstGreedyPinyin() {
+
+        String zhong = "zhong";
+
+        PinyinInfo info = pinyinEngine.parseFirstGreedyPinyin(zhong);
+
+        assertNotNull(info);
+
+        assertEquals(info.getText(), zhong);
+
+    }
+
+    @Test
+    public void testGetPinyinInfoById() {
+    }
+
+    @Test
+    public void testGetInfoByPinyin() {
+    }
+
+    @Test
+    public void testParsePinyin1() {
+    }
+
+    @Test
+    public void testParsePinyin2() {
     }
 }

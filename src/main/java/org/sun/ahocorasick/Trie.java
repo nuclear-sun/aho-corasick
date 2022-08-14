@@ -56,6 +56,9 @@ public class Trie<V> {
         }
         currState.setKeyword(keyword);
         currState.setPayload(value);
+        if(callback != null) {
+            callback.onWordAdded(currState, keyword);
+        }
         return currState;
     }
 
