@@ -153,15 +153,14 @@ public class PinyinEngine {
         if(pinyin == null || pinyin.length() == 0) {
             return 0;
         }
+        PinyinInfo info = getInfoByPinyin(pinyin);
+        if(info != null) {
+            return info.getId();
+        }
         if(pinyin.length() == 1) {
             return pinyin.charAt(0);
         }
-        PinyinInfo info = getInfoByPinyin(pinyin);
-        if(info == null) {
-            return 0;
-        } else {
-            return info.getId();
-        }
+        return 0;
     }
 
     public List<Emit<PinyinInfo>> parsePinyin(CharSequence text) {

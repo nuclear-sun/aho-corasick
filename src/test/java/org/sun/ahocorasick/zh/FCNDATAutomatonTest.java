@@ -14,12 +14,12 @@ public class FCNDATAutomatonTest {
 
 
         FCNDATAutomaton.Builder builder = FCNDATAutomaton.builder();
-        builder.put("习近平", null, true);
+        builder.put("习惯", null, true);
         builder.put("习大大", null, true);
 
         FCNDATAutomaton automaton = builder.build();
 
-        List list = automaton.fussyParseText("习d大");
+        List list = automaton.fussyParseText("xi打大");
         System.out.println(list);
     }
 

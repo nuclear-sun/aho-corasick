@@ -7,7 +7,7 @@ public class RuleBuffer {
 
     private char[] data;
     private int writeIndex = 0;
-    private int ruleIndex = 0;
+    private int ruleIndex = -1;
     private int readIndex = -1;
     private int currRuleChars = 0;
 
@@ -38,18 +38,41 @@ public class RuleBuffer {
         }
     }
 
+    public void putOneCharRules(CharSequence rules) {
+        if(rules == null || rules.length() == 0) {
+            return;
+        }
+
+        final char ruleHead = (1 << 8) + 1;
+        for (int i = 0, length = rules.length(); i < length; i++) {
+            putChar(ruleHead);
+            putChar(rules.charAt(i));
+        }
+    }
+
 
     public boolean hasNextRule() {
 
-        if(ruleIndex >= data.length || data[ruleIndex] == 0) {
+        int nextRuleIndex = 0;
+        if(ruleIndex < 0) {
+            nextRuleIndex = 0;
+        } else {
+            nextRuleIndex = ruleIndex + getOutputCharNum() + 1;
+        }
+
+        if(nextRuleIndex >= data.length || data[nextRuleIndex] == 0) {
             return false;
         }
         return true;
     }
 
     public void nextRule() {
-        ruleIndex = readIndex + 1;
-        readIndex += 2;
+        if(ruleIndex < 0) {
+            ruleIndex = 0;
+        } else {
+            ruleIndex = ruleIndex + getOutputCharNum() + 1;
+        }
+        readIndex = ruleIndex + 1;
         currRuleChars = getOutputCharNum();
     }
 

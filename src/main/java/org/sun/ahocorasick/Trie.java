@@ -45,12 +45,12 @@ public class Trie<V> {
                 childState = new State();
                 currState.getSuccess().put(ch, childState);
                 if(callback != null) {
-                    callback.onStateCreated(childState, keyword);
+                    callback.onStateCreated(childState, keyword, currState, ch);
                 }
             }
 
             if(callback != null) {
-                callback.onStateChecked(childState, keyword);
+                callback.onStateChecked(childState, keyword, currState, ch);
             }
             currState = childState;
         }
@@ -74,10 +74,15 @@ public class Trie<V> {
         Queue<State> queue = new LinkedList<>();
         Collection<State<V>> directChildren = root.getSuccess().values();
 
+        Set<State> visitedDirectChildren = new HashSet<>();
         for (State child : directChildren) {
             child.setFailure(root);
-            queue.offer(child);
+            if(!visitedDirectChildren.contains(child)) {
+                queue.offer(child);
+                visitedDirectChildren.add(child);
+            }
         }
+        visitedDirectChildren = null;
 
         int keywordCount = 0;
 
@@ -132,11 +137,15 @@ public class Trie<V> {
 
             }
 
+            Set<State> visited = new HashSet<>();
             for (State childState : children.values()) {
                 if(childState.getFailure() == null) {
                     childState.setFailure(root);
                 }
-                queue.offer(childState);
+                if(!visited.contains(childState)) {
+                    visited.add(childState);
+                    queue.offer(childState);
+                }
             }
 
         }
@@ -160,8 +169,12 @@ public class Trie<V> {
                 throw e;
             }
 
+            Set<State> visited = new HashSet<>();
             for (State<V> childState : item.getSuccess().values()) {
-                queue.offer(childState);
+                if(!visited.contains(childState)) {
+                    queue.offer(childState);
+                    visited.add(childState);
+                }
             }
         }
     }

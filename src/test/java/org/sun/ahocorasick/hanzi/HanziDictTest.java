@@ -12,7 +12,7 @@ public class HanziDictTest {
     public void testGetPinyinForString() {
 
         String zhongguo = "中国";
-        CharSequence pinyin = HanziDict.getInstance().getPinyinForString(zhongguo);
+        CharSequence pinyin = HanziDict.getInstance().getPinyinCodes(zhongguo);
         System.out.println(pinyin);
 
     }

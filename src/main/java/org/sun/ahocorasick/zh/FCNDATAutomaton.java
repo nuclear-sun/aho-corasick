@@ -3,6 +3,7 @@ package org.sun.ahocorasick.zh;
 import org.sun.ahocorasick.*;
 import org.sun.ahocorasick.fuzzy.FuzzyAutomaton;
 import org.sun.ahocorasick.fuzzy.FuzzyDATAutomaton;
+import org.sun.ahocorasick.fuzzy.PreProcessor;
 import org.sun.ahocorasick.hanzi.HanziDict;
 import org.sun.ahocorasick.hanzi.PinyinEngine;
 
@@ -84,30 +85,21 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
             return this;
         }
 
-        // transform origin string to pinyin coding
-        private void processBeforeBuild() {
-
-            final Map<String, WordItem<V>> pinyinCodeMap = new HashMap<>(dataMap.size());
-
-            dataMap.forEach((key, item) -> {
-                CharSequence pinyinCodes = HanziDict.getInstance().getPinyinForString(key);
-                pinyinCodeMap.put(pinyinCodes.toString(), item);
-            });
-
-            this.dataMap = pinyinCodeMap;
-        }
-
         private Trie<V> buildTrie() {
             final Trie<V> trie = new Trie<>();
             BuildCallback<V> buildCallback = new BuildCallback<V>() {
                 @Override
-                public void onStateCreated(State<V> state, String word) {
+                public void onStateCreated(State<V> state, String word, State<V> parentState, char ch) {
                 }
 
                 @Override
-                public void onStateChecked(State<V> state, String word) {
+                public void onStateChecked(State<V> state, String word, State<V> parentState, char ch) {
                     if(dataMap.get(word).supportFussyMatch) {
                         state.putData(FUSSY_MATCH_FLAG, true);
+                        int pinyinCode = HanziDict.getInstance().getPinyinCode(ch);
+                        if(pinyinCode != ch) {
+                            parentState.getSuccess().put((char) pinyinCode, state);
+                        }
                     }
                 }
 
@@ -129,14 +121,19 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
 
         public FCNDATAutomaton build() {
 
-            processBeforeBuild();
             final Trie<V> trie = buildTrie();
             DATAutomaton<V> datAutomaton = builder.buildFromTrie(trie);
 
             ShapeTransTable shapeTransTable = new ShapeTransTable(trie);
             PinyinTransTable pinyinTransTable = new PinyinTransTable(trie);
             ComplexTransformer complexTransformer = new ComplexTransformer(shapeTransTable, pinyinTransTable);
-            PinyinifyProcessor processor = new PinyinifyProcessor();
+
+            PreProcessor processor = new PreProcessor() {
+                @Override
+                public char process(char ch) {
+                    return PreProcessor.super.process(ch);
+                }
+            };
 
             FuzzyDATAutomaton<V> fuzzyDATAutomaton = new FuzzyDATAutomaton<>(datAutomaton, complexTransformer, processor);
 

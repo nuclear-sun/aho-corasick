@@ -7,7 +7,6 @@ import org.sun.ahocorasick.hanzi.HanziDict;
 import org.sun.ahocorasick.hanzi.PinyinEngine;
 import org.sun.ahocorasick.hanzi.PinyinInfo;
 
-import java.util.List;
 
 class ComplexTransformer implements Transformer {
 
@@ -34,28 +33,18 @@ class ComplexTransformer implements Transformer {
 
         final RuleBuffer ruleBuffer = new RuleBuffer();
 
-
         if(HanziDict.isBMPChineseChar(ch)) {
 
-            CharSequence transformedChars = shapeTransTable.getTransformedChars(state, ch); // 形近转换
-            if(transformedChars == null) {
-                List<String> pinyinList = HanziDict.getInstance().getPinyin(ch);
-                String pinyin = pinyinList.get(0);
-                int pinyinCode = PinyinEngine.getInstance().getInfoByPinyin(pinyin).getId();
-                transformedChars = pinyinTransTable.getTransformedChars(state, pinyinCode); // 音近转换
-            }
+            CharSequence transformedChars = shapeTransTable.getTransformedChars(state, ch); // 1. 形近转换
+            ruleBuffer.putOneCharRules(transformedChars);
 
-            if(transformedChars != null) {
+            int pinyinCode = HanziDict.getInstance().getPinyinCode(ch);                    // 2. 同音转换
+            ruleBuffer.putOneCharRules(String.valueOf((char) pinyinCode));
 
-                final char ruleHead = (1 << 8) + 1;
+            CharSequence pinyinTransChars = pinyinTransTable.getTransformedChars(state, pinyinCode); // 3. 音近转换
+            ruleBuffer.putOneCharRules(pinyinTransChars);
 
-                for (int j = 0, length = transformedChars.length(); j < length; j++) {
-                    ruleBuffer.putChar(ruleHead);
-                    ruleBuffer.putChar(transformedChars.charAt(j));
-                }
-            }
-
-        } else if(Character.isAlphabetic(ch)) {  // 拼音收集转换，例： 中yang
+        } else if(Character.isAlphabetic(ch)) {  // 拼音收集, 例： 中yang
 
             PinyinInfo info = pinyinEngine.parseFirstGreedyPinyin(new CharSequenceView(text, i));
 
@@ -70,10 +59,10 @@ class ComplexTransformer implements Transformer {
                 consumedChars = info.getText().length();
             }
 
-
             final char ruleHead = (char)((consumedChars << 8) + 1);
+            ruleBuffer.putRule(consumedChars, 1, String.valueOf((char) code));           // 4. 拼音收集转换，例：中yang
 
-            CharSequence transformedChars = pinyinTransTable.getTransformedChars(state, code);
+            CharSequence transformedChars = pinyinTransTable.getTransformedChars(state, code);        // 5. 收集拼音的近似音转换
             if(transformedChars != null) {
                 for (int j = 0, length = transformedChars.length(); j < length; j++) {
                     ruleBuffer.putChar(ruleHead);

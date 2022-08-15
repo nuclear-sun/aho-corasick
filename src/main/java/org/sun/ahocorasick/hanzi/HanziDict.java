@@ -50,11 +50,33 @@ public class HanziDict {
 
     }
 
+    /**
+     * Get pinyin code for a Chinese character
+     * @param ch
+     * @return pinyin code or the original char if retrieve faileds
+     */
+    public int getPinyinCode(char ch) {
+
+        if(!isBMPChineseChar(ch)) {
+            return ch;
+        }
+
+        List<String> pinyinList = getInstance().getPinyin(ch);
+        if(pinyinList == null || pinyinList.isEmpty()) {
+            return ch;
+        }
+
+        String firstPinyin = pinyinList.get(0);
+        int code = PinyinEngine.getInstance().getCodeByPinyin(firstPinyin);
+
+        return code == 0 ? ch : code;
+    }
+
     public List<String> getPinyin(int codePoint) {
         return map.get(codePoint);
     }
 
-    public CharSequence getPinyinForString(CharSequence text) {    // TODO 未考虑补充字符
+    public CharSequence getPinyinCodes(CharSequence text) {    // TODO 未考虑补充字符
         if(text == null) {
             return null;
         }
@@ -65,20 +87,8 @@ public class HanziDict {
         for (int i = 0, length = text.length(); i < length; i++) {
 
             final char originChar = text.charAt(i);
-
-            List<String> pinyinList = getPinyin(originChar);
-
-            if(pinyinList == null || pinyinList.isEmpty()) {
-                stringBuilder.append(originChar);
-            } else {
-                String firstPinyin = pinyinList.get(0);
-                PinyinInfo info = PinyinEngine.getInstance().getInfoByPinyin(firstPinyin);
-                if(info == null) {
-                    stringBuilder.append(originChar);
-                } else {
-                    stringBuilder.append((char)info.getId());
-                }
-            }
+            int pinyinCode = getPinyinCode(originChar);
+            stringBuilder.append((char)pinyinCode);
         }
         return stringBuilder;
     }

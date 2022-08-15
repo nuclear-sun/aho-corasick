@@ -136,7 +136,7 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutoma
 
         while (i < length || stateStack.size() > 1) {
 
-            if (stateStack.peek().first < state) {
+            if (stateStack.peek().first < state) {  // 第一次来到这个状态
 
                 RuleBuffer ruleBuffer;
 
@@ -171,7 +171,7 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutoma
                 }
 
 
-            } else {
+            } else {                                          // 再次来到这个状态
                 assert stateStack.peek().first == state;
                 //int ruleIndex = stateStack.peek().second;
 
@@ -196,23 +196,23 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutoma
                 } else {
 
                     ruleBuffer.nextRule();
-
                     int consumedChars = ruleBuffer.getConsumedCharNum();
 
-                    // 这个循环是因为可能存在转换为多个字符的场景，此时期望转换后的字符每个都能匹配上
                     char newChar;
-                    while ((newChar = ruleBuffer.getNextChar()) != 0) {
-                        int child = childState(state, newChar);
-                        assert child > 0;
-                        state = child;
+                    int currState = state;
+                    // 这个循环是因为可能存在转换为多个字符的场景，此时期望转换后的字符每个都能匹配上，如果匹配不上，说明规则有问题应跳过
+                    while ((newChar = ruleBuffer.getNextChar()) != 0 && currState > 0) {
+                        currState = childState(currState, newChar);
                     }
 
-                    i += consumedChars;
-                    if(i<length) {
-                        ch = text.charAt(i);
+                    if(currState > 0) {
+                        state = currState;
+                        i += consumedChars;
+                        if (i < length) {
+                            ch = text.charAt(i);
+                        }
+                        tryCollect(state, i, handler);
                     }
-
-                    tryCollect(state, i, handler);
                 }
 
             }
