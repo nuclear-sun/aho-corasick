@@ -1,4 +1,4 @@
-package org.sun.ahocorasick.hanzi;
+package org.sun.ahocorasick.zhtools;
 
 public interface SimilarityTable {
 

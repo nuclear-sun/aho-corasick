@@ -1,11 +1,11 @@
-package org.sun.ahocorasick.zh;
+package org.sun.ahocorasick.fussyzh;
 
 import org.sun.ahocorasick.DATAutomaton;
 import org.sun.ahocorasick.fuzzy.RuleBuffer;
 import org.sun.ahocorasick.fuzzy.Transformer;
-import org.sun.ahocorasick.hanzi.HanziDict;
-import org.sun.ahocorasick.hanzi.PinyinEngine;
-import org.sun.ahocorasick.hanzi.PinyinInfo;
+import org.sun.ahocorasick.zhtools.HanziDict;
+import org.sun.ahocorasick.zhtools.PinyinEngine;
+import org.sun.ahocorasick.zhtools.PinyinInfo;
 
 
 class ComplexTransformer implements Transformer {
@@ -55,12 +55,13 @@ class ComplexTransformer implements Transformer {
                 code = ch;
                 consumedChars = 1;
             } else {
-                code = info.getId();
+                code = info.getCode();
                 consumedChars = info.getText().length();
             }
 
             final char ruleHead = (char)((consumedChars << 8) + 1);
-            ruleBuffer.putRule(consumedChars, 1, String.valueOf((char) code));           // 4. 拼音收集转换，例：中yang
+            ruleBuffer.putChar(ruleHead);
+            ruleBuffer.putChar((char) code);                                                         // 4. 拼音收集转换，例：中yang
 
             CharSequence transformedChars = pinyinTransTable.getTransformedChars(state, code);        // 5. 收集拼音的近似音转换
             if(transformedChars != null) {

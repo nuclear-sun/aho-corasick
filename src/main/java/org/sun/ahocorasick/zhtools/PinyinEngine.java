@@ -1,4 +1,4 @@
-package org.sun.ahocorasick.hanzi;
+package org.sun.ahocorasick.zhtools;
 
 
 import org.sun.ahocorasick.DATAutomaton;
@@ -55,13 +55,13 @@ public class PinyinEngine {
 
                 id++;
                 if(pinyin.length() == 1) {
-                    pinyinInfo.setId(pinyin.charAt(0));
+                    pinyinInfo.setCode(pinyin.charAt(0));
                 } else {
-                    pinyinInfo.setId(id);
+                    pinyinInfo.setCode(id);
                 }
 
                 builder.put(pinyin, pinyinInfo);
-                pinyinMap.put(pinyinInfo.getId(), pinyinInfo);
+                pinyinMap.put(pinyinInfo.getCode(), pinyinInfo);
             }
 
             this.pinyinTable = pinyinMap;
@@ -124,7 +124,7 @@ public class PinyinEngine {
         return matchHandler.getFirstGreedyMeet();
     }
 
-    public PinyinInfo getPinyinInfoByCode(int id) {
+    public PinyinInfo getInfoByCode(int id) {
         return pinyinTable.get(id);
     }
 
@@ -155,7 +155,7 @@ public class PinyinEngine {
         }
         PinyinInfo info = getInfoByPinyin(pinyin);
         if(info != null) {
-            return info.getId();
+            return info.getCode();
         }
         if(pinyin.length() == 1) {
             return pinyin.charAt(0);

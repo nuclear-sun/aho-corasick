@@ -1,4 +1,4 @@
-package org.sun.ahocorasick.hanzi;
+package org.sun.ahocorasick.zhtools;
 
 import java.io.*;
 import java.util.*;
@@ -55,13 +55,9 @@ public class HanziDict {
      * @param ch
      * @return pinyin code or the original char if retrieve faileds
      */
-    public int getPinyinCode(char ch) {
+    public int getPinyinCode(int ch) {
 
-        if(!isBMPChineseChar(ch)) {
-            return ch;
-        }
-
-        List<String> pinyinList = getInstance().getPinyin(ch);
+        List<String> pinyinList = getPinyin(ch);
         if(pinyinList == null || pinyinList.isEmpty()) {
             return ch;
         }

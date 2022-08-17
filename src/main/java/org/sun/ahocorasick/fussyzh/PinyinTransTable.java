@@ -1,15 +1,15 @@
-package org.sun.ahocorasick.zh;
+package org.sun.ahocorasick.fussyzh;
 
 import org.sun.ahocorasick.State;
 import org.sun.ahocorasick.Trie;
 import org.sun.ahocorasick.fuzzy.DATransformTable;
 import org.sun.ahocorasick.fuzzy.TransformTable;
-import org.sun.ahocorasick.hanzi.PinyinSimTable;
+import org.sun.ahocorasick.zhtools.PinyinSimTable;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.sun.ahocorasick.zh.Consts.FUSSY_MATCH_FLAG;
+import static org.sun.ahocorasick.fussyzh.Constants.FUSSY_MATCH_FLAG;
 
 public class PinyinTransTable implements TransformTable {
 
@@ -38,7 +38,7 @@ public class PinyinTransTable implements TransformTable {
                 }
 
                 // TODO 这里对于非 BMP 字符是没有考虑的
-                CharSequence similarChars = simTable.getSimilarPinyinById(ch); // 这里是不同的地方
+                CharSequence similarChars = simTable.getSimilarPinyinOrHeadCharByCode(ch); // 这里是不同的地方
                 if(similarChars != null) {
                     for (int i = 0, length = similarChars.length(); i < length; i++) {
                         char c = similarChars.charAt(i);

@@ -1,6 +1,6 @@
-package org.sun.ahocorasick.zh;
+package org.sun.ahocorasick.fussyzh;
 
-public class Consts {
+public class Constants {
 
     public static final String FUSSY_MATCH_FLAG = "fussyMatch";
 

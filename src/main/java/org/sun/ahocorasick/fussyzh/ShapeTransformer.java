@@ -1,11 +1,11 @@
-package org.sun.ahocorasick.zh;
+package org.sun.ahocorasick.fussyzh;
 
 import org.sun.ahocorasick.DATAutomaton;
 import org.sun.ahocorasick.fuzzy.RuleBuffer;
 import org.sun.ahocorasick.fuzzy.Transformer;
-import org.sun.ahocorasick.hanzi.HanziDict;
-import org.sun.ahocorasick.hanzi.PinyinEngine;
-import org.sun.ahocorasick.hanzi.PinyinInfo;
+import org.sun.ahocorasick.zhtools.HanziDict;
+import org.sun.ahocorasick.zhtools.PinyinEngine;
+import org.sun.ahocorasick.zhtools.PinyinInfo;
 
 import java.util.List;
 
@@ -46,7 +46,7 @@ public class ShapeTransformer implements Transformer {
             return transformedChar;
         }
 
-        return pinyinInfo.getId();
+        return pinyinInfo.getCode();
     }
 
     @Override

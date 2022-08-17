@@ -3,13 +3,16 @@ package org.sun.ahocorasick;
 import java.util.*;
 import java.util.function.Consumer;
 
-public class Trie<V> {
+public class Trie<V> implements Automaton<V> {
 
     private State<V> root;
 
-    private int stateCount;
+    private int stateCount = 1;
 
     private int keywordCount;
+
+    // whether constructed as an ac automaton
+    private boolean linked;
 
     private BuildCallback<V> callback;
 
@@ -44,6 +47,7 @@ public class Trie<V> {
             if(childState == null) {
                 childState = new State();
                 currState.getSuccess().put(ch, childState);
+                this.stateCount++;
                 if(callback != null) {
                     callback.onStateCreated(childState, keyword, currState, ch);
                 }
@@ -53,6 +57,9 @@ public class Trie<V> {
                 callback.onStateChecked(childState, keyword, currState, ch);
             }
             currState = childState;
+        }
+        if(currState.getKeyword() == null) {
+            keywordCount += 1;
         }
         currState.setKeyword(keyword);
         currState.setPayload(value);
@@ -66,6 +73,10 @@ public class Trie<V> {
         return this.root;
     }
 
+    public boolean isLinked() {
+        return linked;
+    }
+
     public void constructFailureAndPrevWordPointer() {
 
         int ordinal = 1;
@@ -76,23 +87,18 @@ public class Trie<V> {
 
         Set<State> visitedDirectChildren = new HashSet<>();
         for (State child : directChildren) {
-            child.setFailure(root);
             if(!visitedDirectChildren.contains(child)) {
+                child.setFailure(root);
                 queue.offer(child);
                 visitedDirectChildren.add(child);
             }
         }
         visitedDirectChildren = null;
 
-        int keywordCount = 0;
-
         while (!queue.isEmpty()) {
 
             State parentState = queue.poll();
             parentState.setOrdinal(ordinal++);
-            if(parentState.getKeyword() != null) {
-                keywordCount++;
-            }
 
             Map<Character, State> children = parentState.getSuccess();
 
@@ -147,11 +153,67 @@ public class Trie<V> {
                     queue.offer(childState);
                 }
             }
-
         }
 
-        this.stateCount = ordinal - 1;
-        this.keywordCount = keywordCount;
+        this.linked = true;
+    }
+
+    @Override
+    public void parseText(CharSequence text, MatchHandler<V> handler) {
+
+        if(text == null || handler == null) {
+            return;
+        }
+
+        State<V> currState = root;
+        for (int i = 0, length = text.length(); i < length; i++) {
+            char ch = text.charAt(i);
+            if(ch == 0) {
+                continue;
+            }
+
+            currState = nextState(currState, ch);
+            List<State<V>> outputs = collectWords(currState);
+            if(outputs != null) {
+                for (State<V> outputState : outputs) {
+                    String keyword = outputState.getKeyword();
+                    V value = outputState.getPayload();
+                    handler.onMatch(i + 1 - keyword.length(), i + 1, keyword, value);
+                }
+            }
+        }
+    }
+
+    private List<State<V>> collectWords(final State<V> state) {
+
+        List<State<V>> result = new ArrayList<>();
+        if(state.getKeyword() != null) {
+            result.add(state);
+        }
+
+        State<V> currState = state.getPrevWordState();
+        while (currState != null) {
+            result.add(currState);
+            currState = currState.getPrevWordState();
+        }
+
+        if(result.size() != 0) {
+            return result;
+        }
+        return null;
+    }
+
+    private State<V> nextState(final State<V> state, char ch) {
+        State<V> currState = state;
+
+        State<V> childState = null;
+        while (currState != null) {
+            if((childState = currState.getSuccess().get(ch)) != null) {
+                return childState;
+            }
+            currState = currState.getFailure();
+        }
+        return root;
     }
 
     public void traverse(Consumer<State<V>> consumer) {

@@ -1,4 +1,4 @@
-package org.sun.ahocorasick.zh;
+package org.sun.ahocorasick.fussyzh;
 
 import org.sun.ahocorasick.DATAutomaton;
 import org.sun.ahocorasick.fuzzy.RuleBuffer;

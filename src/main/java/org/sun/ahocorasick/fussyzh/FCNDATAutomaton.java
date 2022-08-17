@@ -1,17 +1,15 @@
-package org.sun.ahocorasick.zh;
+package org.sun.ahocorasick.fussyzh;
 
 import org.sun.ahocorasick.*;
 import org.sun.ahocorasick.fuzzy.FuzzyAutomaton;
 import org.sun.ahocorasick.fuzzy.FuzzyDATAutomaton;
-import org.sun.ahocorasick.fuzzy.PreProcessor;
-import org.sun.ahocorasick.hanzi.HanziDict;
-import org.sun.ahocorasick.hanzi.PinyinEngine;
+import org.sun.ahocorasick.zhtools.HanziDict;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.sun.ahocorasick.zh.Consts.FUSSY_MATCH_FLAG;
+import static org.sun.ahocorasick.fussyzh.Constants.FUSSY_MATCH_FLAG;
 
 public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
 
@@ -127,15 +125,7 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
             ShapeTransTable shapeTransTable = new ShapeTransTable(trie);
             PinyinTransTable pinyinTransTable = new PinyinTransTable(trie);
             ComplexTransformer complexTransformer = new ComplexTransformer(shapeTransTable, pinyinTransTable);
-
-            PreProcessor processor = new PreProcessor() {
-                @Override
-                public char process(char ch) {
-                    return PreProcessor.super.process(ch);
-                }
-            };
-
-            FuzzyDATAutomaton<V> fuzzyDATAutomaton = new FuzzyDATAutomaton<>(datAutomaton, complexTransformer, processor);
+            FuzzyDATAutomaton<V> fuzzyDATAutomaton = new FuzzyDATAutomaton<>(datAutomaton, complexTransformer);
 
             return new FCNDATAutomaton(fuzzyDATAutomaton);
         }

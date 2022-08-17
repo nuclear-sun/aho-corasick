@@ -1,4 +1,4 @@
-package org.sun.ahocorasick.hanzi;
+package org.sun.ahocorasick.zhtools;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -29,7 +29,7 @@ public class PinyinEngineTest {
 
     @Test
     public void testGetPinyinById() {
-        PinyinInfo pinyinInfo = pinyinEngine.getPinyinInfoByCode(424);
+        PinyinInfo pinyinInfo = pinyinEngine.getInfoByCode(424);
         System.out.println(pinyinInfo);
     }
 

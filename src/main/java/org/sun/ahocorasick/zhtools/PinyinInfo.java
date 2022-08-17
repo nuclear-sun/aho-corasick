@@ -1,18 +1,17 @@
-package org.sun.ahocorasick.hanzi;
+package org.sun.ahocorasick.zhtools;
 
 public class PinyinInfo {
 
-    private int id;
+    private int code;
 
     private String text;
 
-
-    public int getId() {
-        return id;
+    public int getCode() {
+        return code;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setCode(int code) {
+        this.code = code;
     }
 
     public String getText() {
@@ -26,7 +25,7 @@ public class PinyinInfo {
     @Override
     public String toString() {
         return "PinyinInfo{" +
-                "id=" + id +
+                "code=" + code +
                 ", text='" + text + '\'' +
                 '}';
     }

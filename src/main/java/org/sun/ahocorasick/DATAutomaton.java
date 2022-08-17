@@ -184,27 +184,6 @@ public class DATAutomaton<V> implements Automaton<V> {
 
     }
 
-
-    public List<Emit<V>> parseText(CharSequence text) {
-
-        List<Emit<V>> results = new LinkedList<>();
-
-        MatchHandler<V> listener = new MatchHandler<V>() {
-            @Override
-            public boolean onMatch(int start, int end, String key, V value) {
-                Emit<V> emit = new Emit<>(key, start, end, value);
-                results.add(emit);
-                return true;
-            }
-        };
-
-        parseText(text, listener);
-
-        return results;
-    }
-
-
-
     public static Builder builder() {
         return new Builder();
     }

@@ -1,4 +1,4 @@
-package org.sun.ahocorasick.zh;
+package org.sun.ahocorasick.fussyzh;
 
 public class CharSequenceView implements CharSequence {
 

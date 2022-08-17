@@ -1,15 +1,15 @@
-package org.sun.ahocorasick.zh;
+package org.sun.ahocorasick.fussyzh;
 
 import org.sun.ahocorasick.State;
 import org.sun.ahocorasick.Trie;
 import org.sun.ahocorasick.fuzzy.DATransformTable;
 import org.sun.ahocorasick.fuzzy.TransformTable;
-import org.sun.ahocorasick.hanzi.ShapeSimTable;
+import org.sun.ahocorasick.zhtools.ShapeSimTable;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.sun.ahocorasick.zh.Consts.FUSSY_MATCH_FLAG;
+import static org.sun.ahocorasick.fussyzh.Constants.FUSSY_MATCH_FLAG;
 
 /**
  * A transform table built from a trie ac automaton and similarity table

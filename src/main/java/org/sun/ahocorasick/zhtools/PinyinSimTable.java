@@ -1,4 +1,4 @@
-package org.sun.ahocorasick.hanzi;
+package org.sun.ahocorasick.zhtools;
 
 import org.sun.ahocorasick.MatchHandler;
 
@@ -66,7 +66,19 @@ public class PinyinSimTable implements SimilarityTable {
         }
     }
 
-    public List<String> getSimilarPinyins(String pinyin) {
+    public List<String> getSimilarPinyinOrHeadChar(final String pinyin) {
+        List<String> similarPinyins = getSimilarPinyins(pinyin);
+        char head = pinyin.charAt(0);
+        if(Character.isAlphabetic(head)) {
+            String headString = String.valueOf(head);
+            if(similarPinyins.isEmpty() || !similarPinyins.get(0).equalsIgnoreCase((headString))) {
+                similarPinyins.add(headString);
+            }
+        }
+        return similarPinyins;
+    }
+
+    public List<String> getSimilarPinyins(final String pinyin) {
 
         List<String> similarPinyins = this.similarTable.get(pinyin);
         if(similarPinyins != null) {
@@ -78,21 +90,22 @@ public class PinyinSimTable implements SimilarityTable {
         // 同前缀的拼音
         class CommonPrefixMatchHandler implements MatchHandler<PinyinInfo> {
 
-            private int mostRight = 1;
+            private int mostRight = 0;
 
             @Override
             public boolean onMatch(int start, int end, String key, PinyinInfo value) {
-                if(start > 0 && end > mostRight) {
+
+                if(end > 6) {
                     return false;
-                } else {
-                    if(start == 0 && end > mostRight) {
-                        mostRight = end;
-                    }
-                    if(start == 0) {
+                }
+
+                if(start == 0 && end > mostRight) {
+                    mostRight = end;
+                    if(end != pinyin.length()) {
                         commonPrefixPinyinList.add(value.getText());
                     }
-                    return true;
                 }
+                return true;
             }
         }
 
@@ -101,14 +114,35 @@ public class PinyinSimTable implements SimilarityTable {
     }
 
 
-    public CharSequence getSimilarPinyinById(int pinyinId) {
-        PinyinInfo info = pinyinEngine.getPinyinInfoByCode(pinyinId);
+    public CharSequence getSimilarPinyinByCode(int pinyinCode) {
+        PinyinInfo info = pinyinEngine.getInfoByCode(pinyinCode);
         if(info == null) {
             return null;
         }
 
         String pinyin = info.getText();
         List<String> similarPinyins = getSimilarPinyins(pinyin);
+
+        StringBuilder sb = new StringBuilder(similarPinyins.size());
+
+        for (String similarPinyin : similarPinyins) {
+            int codeByPinyin = pinyinEngine.getCodeByPinyin(similarPinyin);
+            if(codeByPinyin != 0) {
+                sb.append((char) codeByPinyin);
+            }
+        }
+        return sb.toString();
+    }
+
+
+    public CharSequence getSimilarPinyinOrHeadCharByCode(int pinyinCode) {
+        PinyinInfo info = pinyinEngine.getInfoByCode(pinyinCode);
+        if(info == null) {
+            return null;
+        }
+
+        String pinyin = info.getText();
+        List<String> similarPinyins = getSimilarPinyinOrHeadChar(pinyin);
 
         StringBuilder sb = new StringBuilder(similarPinyins.size());
 
@@ -130,6 +164,6 @@ public class PinyinSimTable implements SimilarityTable {
 
     @Override
     public CharSequence getSimilarChars(char ch) {
-        return getSimilarPinyinById(ch);
+        return getSimilarPinyinByCode(ch);
     }
 }
