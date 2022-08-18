@@ -6,7 +6,6 @@ import org.sun.ahocorasick.fuzzy.FuzzyDATAutomaton;
 import org.sun.ahocorasick.zhtools.HanziDict;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.sun.ahocorasick.fussyzh.Constants.FUSSY_MATCH_FLAG;
@@ -23,16 +22,11 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
         return new Builder<>();
     }
 
-    @Override
-    public List<Emit<V>> fussyParseText(CharSequence text) {
-        return this.fuzzyDATAutomaton.fussyParseText(text);
-    }
 
     @Override
     public void fussyParseText(CharSequence text, MatchHandler<V> handler) {
         this.fuzzyDATAutomaton.fussyParseText(text, handler);
     }
-
 
     public static class Builder<V> {
 
@@ -103,9 +97,6 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
 
                 @Override
                 public void onWordAdded(State<V> state, String word) {
-                    // now the keyword is pinyin coding, reset to original keyword
-                    WordItem<V> wordItem = dataMap.get(word);
-                    state.setKeyword(wordItem.key);
                 }
             };
 
@@ -120,6 +111,12 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
         public FCNDATAutomaton build() {
 
             final Trie<V> trie = buildTrie();
+            builder.setWordInfoCallback((state, wordEntry) -> {
+                Boolean fuzzyMatch = (Boolean) state.getData(FUSSY_MATCH_FLAG);
+                if(fuzzyMatch != null && fuzzyMatch) {
+                    wordEntry.setWordMetaFlags(1);
+                }
+            });
             DATAutomaton<V> datAutomaton = builder.buildFromTrie(trie);
 
             ShapeTransTable shapeTransTable = new ShapeTransTable(trie);

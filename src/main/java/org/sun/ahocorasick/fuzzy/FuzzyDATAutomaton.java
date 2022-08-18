@@ -1,14 +1,14 @@
 package org.sun.ahocorasick.fuzzy;
 
 import org.sun.ahocorasick.DATAutomaton;
-import org.sun.ahocorasick.Emit;
 import org.sun.ahocorasick.MatchHandler;
 import org.sun.ahocorasick.Tuple;
-import org.sun.ahocorasick.fussyzh.TruncatableDeque;
 
 import java.util.*;
 
 public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutomaton<V>{
+
+    private static final int WORD_META_FLAG_FUZZY_MASK = 1;
 
     private Transformer transformer;
 
@@ -17,103 +17,48 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutoma
         this.transformer = transformer;
     }
 
-    @Override
-    public void parseText(CharSequence text, MatchHandler<V> handler) {
+    private boolean tryCollectAndHandle(int state, int i,
+                                        MatchHandler<V> handler,
+                                        TruncatableDeque<Tuple<Integer, Integer>> anchorDeque,
+                                        TruncatableDeque<Tuple<Character, Integer>> charStack
+                                        ) {
 
-        if(text == null || handler == null) {
-            return;
-        }
-
-        int currState = 1;
-
-        // used to calculate left edge when some special chars are ignored
-        final Deque<Tuple<Integer, Integer>> anchorDeque = new LinkedList<>();
-        int totalIgnoreChars = 0;
-
-
-        for (int i = 0, length = text.length(); i < length; i++) {
-
-            final char ch = text.charAt(i);
-
-            if(ch == 0) {  // treat '\0' as the only special case to ignore
-                totalIgnoreChars += 1;
-
-                Tuple<Integer, Integer> last;
-                if(anchorDeque.size() == 0 || (last = anchorDeque.getLast()).first != i - 1) {
-                    Tuple<Integer, Integer> newItem = new Tuple<>(i, 1);
-                    anchorDeque.offerLast(newItem);
-
-                    // clean anchorDeque when new item added
-                    if(anchorDeque.size() > ANCHOR_DEQUE_CLEAN_THRESHOLD) {
-                        Tuple<Integer, Integer> firstItem;
-                        while (anchorDeque.size() > 1 &&
-                                i - (firstItem = anchorDeque.getFirst()).first -
-                                        (totalIgnoreChars - firstItem.second) >= MAX_KEYWORD_LENGTH) {
-                            totalIgnoreChars -= firstItem.second;
-                            anchorDeque.removeFirst();
-                        }
-                    }
-
-                } else {                 //   last != null && i == last.getFirst() + 1
-                    last.first = i;
-                    last.second += 1;
-                }
-
-                continue;
-            }
-
-
-            currState = nextState(currState, ch);
-
-            List<Integer> outputs = collectWords(currState);
-
-            if(outputs != null) {
-                for (Integer index : outputs) {
-
-                    Tuple<String, V> datum = this.data[index];
-                    int start = calcStart(anchorDeque, i, datum.first.length());
-                    boolean isContinue = handler.onMatch(start, i + 1, datum.first, datum.second);
-                    if(!isContinue) return;
-                }
-            }
-
-            if(this.interruptable && Thread.currentThread().isInterrupted()) return;
-        }
-    }
-
-    boolean tryCollectAndHandle(int state, int i, MatchHandler<V> handler, TruncatableDeque<Tuple<Integer, Integer>> anchorDeque) {
         List<Integer> outputs = collectWords(state);
 
         if(outputs != null) {
+
+            int firstFuzzyCharIndex;
+            if(charStack.size() > 1) {
+                firstFuzzyCharIndex = charStack.peekLastNode().getPrev().getElement().second;
+            } else {
+                firstFuzzyCharIndex = -1;
+            }
+
             for (Integer index : outputs) {
 
-                Tuple<String, V> datum = this.data[index];
-                String word = datum.first;
+                WordEntry<V> datum = this.data[index];
+
+                String word = datum.getKeyword();
                 int start = calcStart(anchorDeque, i, word.length());
-                boolean isContinue = handler.onMatch(start, i + 1, word, datum.second);
+                // correct start if i in is ignore space, this is possible in fuzzy match
+                Tuple<Integer, Integer> lastAnchor = anchorDeque.peekLast();
+                if(i < lastAnchor.first) {
+                    start += lastAnchor.first + 1 - i;
+                }
+
+                // skip this emit, if this is a fuzzy match but the word does not support fuzzy or not contain the first fuzzy char.
+                if(firstFuzzyCharIndex >= 0 &&
+                        (start > firstFuzzyCharIndex ||
+                                (datum.getWordMetaFlags() & WORD_META_FLAG_FUZZY_MASK) == 0)) {
+                    continue;
+                }
+
+                boolean isContinue = handler.onMatch(start, i + 1, word, datum.getPayload());
                 if(!isContinue) return false;
             }
         }
         return true;
     }
-
-    public List<Emit<V>> fussyParseText(CharSequence text) {
-
-        final List<Emit<V>> list = new LinkedList<>();
-
-        MatchHandler<V> handler = new MatchHandler<V>() {
-            @Override
-            public boolean onMatch(int start, int end, String key, V value) {
-                list.add(new Emit<V>(key, start, end, value));
-                return true;
-            }
-        };
-
-        fussyParseText(text, handler);
-
-        return list;
-    }
-
 
     private static class AnchorRecoverInfo {
         final TruncatableDeque.Node node;
@@ -147,7 +92,7 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutoma
         // use these stacks to recover above five states
         Deque<AnchorRecoverInfo> anchorStack = new ArrayDeque<>(); // use this stack to recover anchorDeque and totalIgnoreChars
         Deque<Tuple<Integer, RuleBuffer>> stateStack = new ArrayDeque<>();
-        Deque<Tuple<Character, Integer>> charStack = new ArrayDeque<>();
+        TruncatableDeque<Tuple<Character, Integer>> charStack = new TruncatableDeque<>();
         stateStack.push(new Tuple<>(0, null));  // 哨兵数据
         charStack.push(new Tuple<>('\0', -1));
         anchorStack.push(new AnchorRecoverInfo(null, 0, 0, 0));
@@ -195,7 +140,7 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutoma
                         ch = text.charAt(i);
                     }
                     state = child;
-                    if(!tryCollectAndHandle(state, i - 1, handler, anchorDeque)) {
+                    if(!tryCollectAndHandle(state, i - 1, handler, anchorDeque, charStack)) {
                         return;
                     }
 
@@ -208,7 +153,7 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutoma
                         if(i < length) {
                             ch = text.charAt(i);
                         }
-                        if(!tryCollectAndHandle(state, i - 1, handler, anchorDeque)) {
+                        if(!tryCollectAndHandle(state, i - 1, handler, anchorDeque, charStack)) {
                             return;
                         }
                     } else {                              // 恢复上个模糊转换状态
@@ -287,7 +232,7 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutoma
                             totalIgnoreChars += (consumedChars - 1);
                         }
 
-                        if(!tryCollectAndHandle(state, i - consumedChars, handler, anchorDeque)) {
+                        if(!tryCollectAndHandle(state, i - 1, handler, anchorDeque, charStack)) {
                             return;
                         }
                     }
@@ -299,8 +244,8 @@ public class FuzzyDATAutomaton<V> extends DATAutomaton<V> implements FuzzyAutoma
 
     }
 
-    boolean canFussyMatch(int state, char ch, Deque<Tuple<Integer, RuleBuffer>> stateStack) {
-        if(stateStack.size() < 3) return true;
+    protected boolean canFussyMatch(int state, char ch, Deque<Tuple<Integer, RuleBuffer>> stateStack) {
+        if(stateStack.size() < 4) return true;
         return false;
     }
 

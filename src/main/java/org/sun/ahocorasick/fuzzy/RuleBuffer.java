@@ -38,6 +38,12 @@ public class RuleBuffer {
         }
     }
 
+    public void putOneCharRule(char ch) {
+        final char ruleHead = (1 << 8) + 1;
+        putChar(ruleHead);
+        putChar(ch);
+    }
+
     public void putOneCharRules(CharSequence rules) {
         if(rules == null || rules.length() == 0) {
             return;

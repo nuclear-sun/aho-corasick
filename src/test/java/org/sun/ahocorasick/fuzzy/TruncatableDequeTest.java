@@ -1,5 +1,6 @@
-package org.sun.ahocorasick.fussyzh;
+package org.sun.ahocorasick.fuzzy;
 
+import org.sun.ahocorasick.fuzzy.TruncatableDeque;
 import org.testng.annotations.Test;
 
 import java.util.NoSuchElementException;

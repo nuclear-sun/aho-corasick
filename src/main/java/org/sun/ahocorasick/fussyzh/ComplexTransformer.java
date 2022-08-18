@@ -28,6 +28,10 @@ class ComplexTransformer implements Transformer {
         return 0;
     }
 
+    private static boolean isCharAcceptable(DATAutomaton automaton, int state, char ch) {
+        return automaton.childState(state, ch) > 1;
+    }
+
     @Override
     public RuleBuffer getTransformRules(DATAutomaton automaton, int state, CharSequence text, int i, char ch) {
 
@@ -38,13 +42,22 @@ class ComplexTransformer implements Transformer {
             CharSequence transformedChars = shapeTransTable.getTransformedChars(state, ch); // 1. 形近转换
             ruleBuffer.putOneCharRules(transformedChars);
 
-            int pinyinCode = HanziDict.getInstance().getPinyinCode(ch);                    // 2. 同音转换
-            ruleBuffer.putOneCharRules(String.valueOf((char) pinyinCode));
+            int pinyinCode = HanziDict.getInstance().getPinyinCode(ch);                     // 2. 同音转换
+            if(isCharAcceptable(automaton, state, (char) pinyinCode)) {
+                ruleBuffer.putOneCharRule((char) pinyinCode);
+            }
 
             CharSequence pinyinTransChars = pinyinTransTable.getTransformedChars(state, pinyinCode); // 3. 音近转换
-            ruleBuffer.putOneCharRules(pinyinTransChars);
+            if(pinyinTransChars != null) {
+                for (int j = 0, length = pinyinTransChars.length(); j < length; j++) {
+                    char transChar = pinyinTransChars.charAt(j);
+                    if(isCharAcceptable(automaton, state, transChar)) {
+                        ruleBuffer.putOneCharRule(transChar);
+                    }
+                }
+            }
 
-        } else if(Character.isAlphabetic(ch)) {  // 拼音收集, 例： 中yang
+        } else if(Character.isLetter(ch)) {  // 拼音收集, 例： 中yang
 
             PinyinInfo info = pinyinEngine.parseFirstGreedyPinyin(new CharSequenceView(text, i));
 

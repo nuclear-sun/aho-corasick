@@ -1,6 +1,8 @@
 package org.sun.ahocorasick;
 
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class DATAutomaton<V> implements Automaton<V> {
 
@@ -11,7 +13,7 @@ public class DATAutomaton<V> implements Automaton<V> {
 
     protected final int[] check;
 
-    protected final Tuple<String, V>[] data;
+    protected final WordEntry<V>[] data;
 
     protected final int stateCount;
 
@@ -21,7 +23,7 @@ public class DATAutomaton<V> implements Automaton<V> {
     // controls
     protected final boolean interruptable;
 
-    private DATAutomaton(int[] base, int[] check, Tuple<String, V>[] data, int stateCount, boolean interruptable) {
+    private DATAutomaton(int[] base, int[] check, WordEntry<V>[] data, int stateCount, boolean interruptable) {
         this.base = base;
         this.check = check;
         this.data = data;
@@ -44,7 +46,7 @@ public class DATAutomaton<V> implements Automaton<V> {
      * next success state when matching
      * @return next success state or -1 when fail
      */
-    protected int childState(int currState, char ch) {
+    public int childState(int currState, char ch) {
         int index = base[currState] + ch;
         if(index >= reserveLength && index < base.length && check[index] == currState) {
             return base[index];
@@ -172,16 +174,19 @@ public class DATAutomaton<V> implements Automaton<V> {
             if(outputs != null) {
                 for (Integer index : outputs) {
 
-                    Tuple<String, V> datum = this.data[index];
-                    int start = calcStart(anchorDeque, i, datum.first.length());
-                    boolean isContinue = handler.onMatch(start, i + 1, datum.first, datum.second);
+                    WordEntry<V> datum = this.data[index];
+                    int start = calcStart(anchorDeque, i, datum.getKeyword().length());
+                    boolean isContinue = handler.onMatch(start, i + 1, datum.getKeyword(), datum.getPayload());
                     if(!isContinue) return;
                 }
             }
 
             if(this.interruptable && Thread.currentThread().isInterrupted()) return;
         }
+    }
 
+    protected WordEntry<V> getWordEntryByState(int state) {
+        return data[state];
     }
 
     public static Builder builder() {
@@ -234,6 +239,52 @@ public class DATAutomaton<V> implements Automaton<V> {
         }
     }
 
+    public static class WordEntry<V> {
+
+        private final String keyword;
+        private final V payload;
+        private int wordMetaFlags;
+        // may contain extended meta info
+        private Object extMetaInfo;
+
+
+        public WordEntry(String keyword, V value, int wordMetaFlags) {
+            this.keyword = keyword;
+            this.payload = value;
+            this.wordMetaFlags = wordMetaFlags;
+        }
+
+        public WordEntry(String keyword, V value) {
+            this.keyword = keyword;
+            this.payload = value;
+        }
+
+        public String getKeyword() {
+            return keyword;
+        }
+
+        public int getWordMetaFlags() {
+            return wordMetaFlags;
+        }
+
+        public void setWordMetaFlags(int wordMetaFlags) {
+            this.wordMetaFlags = wordMetaFlags;
+        }
+
+        public Object getExtMetaInfo() {
+            return extMetaInfo;
+        }
+
+        public void setExtMetaInfo(Object extMetaInfo) {
+            this.extMetaInfo = extMetaInfo;
+        }
+
+        public V getPayload() {
+            return payload;
+        }
+
+    }
+
     public static class Builder<V> {
 
         private int[] base;
@@ -241,12 +292,15 @@ public class DATAutomaton<V> implements Automaton<V> {
         private int[] check;
 
         // start from index 1
-        private Tuple<String, V>[] data;
+        private WordEntry<V>[] data;
 
         private int stateCount;
 
         // controls
         private boolean interruptable = false;
+
+        // callback when word entry placed
+        private BiConsumer<State<V>, WordEntry<V>> callback;
 
         // temp
         private Trie<V> trie;
@@ -277,6 +331,10 @@ public class DATAutomaton<V> implements Automaton<V> {
                 this.dataMap.put(key, null);
             }
             return this;
+        }
+
+        public void setWordInfoCallback(BiConsumer<State<V>, WordEntry<V>> callback) {
+            this.callback = callback;
         }
 
         public Builder<V> setInterruptable(boolean interruptable) {
@@ -430,7 +488,7 @@ public class DATAutomaton<V> implements Automaton<V> {
                 int i = 1;
             }
             final IntHolder holder = new IntHolder();
-            this.data = new Tuple[trie.getKeywordCount() + 1];
+            this.data = new WordEntry[trie.getKeywordCount() + 1];
 
             trie.traverse(state -> {
                 int ordinal = state.getOrdinal();
@@ -438,10 +496,14 @@ public class DATAutomaton<V> implements Automaton<V> {
                 // 1. place outer index
                 final String keyword  = state.getKeyword();
                 if(keyword != null) {
-                    Tuple<String, V> tuple = new Tuple<>(keyword, state.getPayload());
-                    this.data[holder.i] = tuple;
+                    WordEntry<V> wordEntry = new WordEntry<>(keyword, state.getPayload());
+                    this.data[holder.i] = wordEntry;
                     check[ordinal] = holder.i;
                     holder.i++;
+
+                    if(callback != null) {
+                        callback.accept(state, wordEntry);
+                    }
                 }
 
                 // 2. place failure pointer

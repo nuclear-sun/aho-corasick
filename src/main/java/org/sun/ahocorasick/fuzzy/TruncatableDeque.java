@@ -1,4 +1,6 @@
-package org.sun.ahocorasick.fussyzh;
+package org.sun.ahocorasick.fuzzy;
+
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Collection;
 import java.util.Deque;
@@ -14,6 +16,18 @@ public class TruncatableDeque<E> implements Deque<E> {
 
         public Node(E element) {
             this.element = element;
+        }
+
+        public E getElement() {
+            return element;
+        }
+
+        public Node<E> getPrev() {
+            return prev;
+        }
+
+        public Node<E> getNext() {
+            return next;
         }
     }
 
@@ -115,12 +129,12 @@ public class TruncatableDeque<E> implements Deque<E> {
 
     @Override
     public E getFirst() {
-        return null;
+        return peekFirst();
     }
 
     @Override
     public E getLast() {
-        return null;
+        return peekLast();
     }
 
 
@@ -130,91 +144,95 @@ public class TruncatableDeque<E> implements Deque<E> {
 
     @Override
     public boolean removeFirstOccurrence(Object o) {
-        return false;
+        throw new NotImplementedException();
     }
 
     @Override
     public boolean removeLastOccurrence(Object o) {
-        return false;
+        throw new NotImplementedException();
     }
 
     @Override
     public boolean add(E e) {
-        return false;
+        throw new NotImplementedException();
     }
 
     @Override
     public boolean offer(E e) {
-        return false;
+        return offerLast(e);
     }
 
     @Override
     public E remove() {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public E poll() {
-        return null;
+        return pollFirst();
     }
 
     @Override
     public E element() {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public E peek() {
-        return null;
+        return peekFirst();
     }
 
     @Override
     public void push(E e) {
-
+        offerFirst(e);
     }
 
     @Override
     public E pop() {
-        return null;
+        return pollFirst();
     }
 
     @Override
     public boolean remove(Object o) {
-        return false;
+        throw new NotImplementedException();
     }
 
     @Override
     public boolean containsAll(Collection<?> c) {
-        return false;
+        throw new NotImplementedException();
     }
 
     @Override
     public boolean addAll(Collection<? extends E> c) {
-        return false;
+        throw new NotImplementedException();
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        return false;
+        throw new NotImplementedException();
     }
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        return false;
+        throw new NotImplementedException();
     }
 
     @Override
     public void clear() {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public boolean contains(Object o) {
-        return false;
+        throw new NotImplementedException();
     }
 
     public Node<E> peekLastNode() {
         return last;
+    }
+
+    public Node<E> peekFirstNode() {
+        return first;
     }
 
     public E peekFirst() {
@@ -253,22 +271,22 @@ public class TruncatableDeque<E> implements Deque<E> {
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return size == 0;
     }
 
     @Override
     public Iterator<E> iterator() {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public Object[] toArray() {
-        return new Object[0];
+        throw new NotImplementedException();
     }
 
     @Override
     public <T> T[] toArray(T[] a) {
-        return null;
+        throw new NotImplementedException();
     }
 
 
