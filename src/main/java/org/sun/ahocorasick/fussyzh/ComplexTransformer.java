@@ -1,6 +1,7 @@
 package org.sun.ahocorasick.fussyzh;
 
 import org.sun.ahocorasick.DATAutomaton;
+import org.sun.ahocorasick.Emit;
 import org.sun.ahocorasick.fuzzy.RuleBuffer;
 import org.sun.ahocorasick.fuzzy.Transformer;
 import org.sun.ahocorasick.zhtools.HanziDict;
@@ -57,30 +58,35 @@ class ComplexTransformer implements Transformer {
                 }
             }
 
-        } else if(Character.isLetter(ch)) {  // 拼音收集, 例： 中yang
+        } else if(Character.isLetter(ch)) {  // 拼音收集, 例： 中yang, 注意，收集的拼音中可能含有停字符如 中y###an##g, 位置信息无法在算法框架中更新，需要在这里记录
 
-            PinyinInfo info = pinyinEngine.parseFirstGreedyPinyin(new CharSequenceView(text, i));
+            Emit<PinyinInfo> emit = pinyinEngine.parseFirstGreedyPinyin(new LowerCaseCharSequence(new CharSequenceView(text, i)));
 
             int consumedChars;
             int code;
 
-            if(info == null) {
+            if(emit == null || emit.getEnd() > 127) { // 可能包含过多停止字符，则认为只识别到首字符，这可能是不合理的
                 code = ch;
                 consumedChars = 1;
             } else {
-                code = info.getCode();
-                consumedChars = info.getText().length();
+                code = emit.getValue().getCode();
+                consumedChars = emit.getEnd() - emit.getStart();
             }
 
-            final char ruleHead = (char)((consumedChars << 8) + 1);
-            ruleBuffer.putChar(ruleHead);
-            ruleBuffer.putChar((char) code);                                                         // 4. 拼音收集转换，例：中yang
+            final char ruleHead = (char) ((consumedChars << 8) + 1);
+            if(isCharAcceptable(automaton, state, (char) code)) {
+                ruleBuffer.putChar(ruleHead);
+                ruleBuffer.putChar((char) code);                                                         // 4. 拼音收集转换，例：中yang
+            }
 
-            CharSequence transformedChars = pinyinTransTable.getTransformedChars(state, code);        // 5. 收集拼音的近似音转换
+            CharSequence transformedChars = pinyinTransTable.getTransformedChars(state, code);           // 5. 收集拼音的近似音转换
             if(transformedChars != null) {
                 for (int j = 0, length = transformedChars.length(); j < length; j++) {
-                    ruleBuffer.putChar(ruleHead);
-                    ruleBuffer.putChar(transformedChars.charAt(j));
+                    final char transChar = transformedChars.charAt(j);
+                    if(isCharAcceptable(automaton, state, transChar)) {
+                        ruleBuffer.putChar(ruleHead);
+                        ruleBuffer.putChar(transChar);
+                    }
                 }
             }
         }

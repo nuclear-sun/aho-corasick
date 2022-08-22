@@ -185,10 +185,6 @@ public class DATAutomaton<V> implements Automaton<V> {
         }
     }
 
-    protected WordEntry<V> getWordEntryByState(int state) {
-        return data[state];
-    }
-
     public static Builder builder() {
         return new Builder();
     }

@@ -29,7 +29,9 @@ public class HanziDictTest {
         List<Emit<PinyinInfo>> zhong1 = PinyinEngine.getInstance().parsePinyin("zhong");
         System.out.println(zhong1);
 
-        PinyinInfo info = PinyinEngine.getInstance().parseFirstGreedyPinyin("zhong");
+
+
+        Emit<PinyinInfo> info = PinyinEngine.getInstance().parseFirstGreedyPinyin("zhong");
         System.out.println(info);
     }
 }

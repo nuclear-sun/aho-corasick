@@ -10,11 +10,11 @@ import java.util.Map;
 
 import static org.sun.ahocorasick.fussyzh.Constants.FUSSY_MATCH_FLAG;
 
-public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
+public class FZHAutomaton<V> implements FuzzyAutomaton<V> {
 
     private FuzzyDATAutomaton<V> fuzzyDATAutomaton;
 
-    private FCNDATAutomaton(FuzzyDATAutomaton<V> fuzzyDATAutomaton) {
+    private FZHAutomaton(FuzzyDATAutomaton<V> fuzzyDATAutomaton) {
         this.fuzzyDATAutomaton = fuzzyDATAutomaton;
     }
 
@@ -108,7 +108,7 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
             return trie;
         }
 
-        public FCNDATAutomaton build() {
+        public FZHAutomaton build() {
 
             final Trie<V> trie = buildTrie();
             builder.setWordInfoCallback((state, wordEntry) -> {
@@ -124,7 +124,7 @@ public class FCNDATAutomaton<V> implements FuzzyAutomaton<V> {
             ComplexTransformer complexTransformer = new ComplexTransformer(shapeTransTable, pinyinTransTable);
             FuzzyDATAutomaton<V> fuzzyDATAutomaton = new FuzzyDATAutomaton<>(datAutomaton, complexTransformer);
 
-            return new FCNDATAutomaton(fuzzyDATAutomaton);
+            return new FZHAutomaton(fuzzyDATAutomaton);
         }
     }
 

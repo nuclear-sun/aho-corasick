@@ -20,7 +20,7 @@ public class State<V> {
     private Map<String, Object> dataMap;
 
     public State() {
-        this.success = new HashMap<>();
+        this.success = new HashMap<>(2);
     }
 
     public void setOrdinal(int ordinal) {
@@ -69,7 +69,7 @@ public class State<V> {
 
     public void putData(String key, Object data) {
         if(dataMap == null) {
-            dataMap = new HashMap<>();
+            dataMap = new HashMap<>(2);
         }
         dataMap.put(key, data);
     }

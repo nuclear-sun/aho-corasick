@@ -45,7 +45,7 @@ public class ShapeTransTable implements TransformTable {
                         char c = similarChars.charAt(i);
                         StringBuilder transformTargetChars = rawTransMap.get(c);
                         if (transformTargetChars == null) {
-                            transformTargetChars = new StringBuilder();
+                            transformTargetChars = new StringBuilder(2);
                             rawTransMap.put((int) c, transformTargetChars);
                         }
                         transformTargetChars.append(ch);

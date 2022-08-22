@@ -12,6 +12,46 @@ import java.util.*;
 
 public class PinyinEngine {
 
+    private static class PinyinAutomaton extends DATAutomaton<PinyinInfo> {
+
+        protected PinyinAutomaton(DATAutomaton that) {
+            super(that);
+        }
+
+        public Emit<PinyinInfo> parseFirstGreedyPinyin(CharSequence text) {
+
+            int i = 0;
+            int length = text.length();
+            int state = 1;
+            int wordState = -1;
+            int wordEnd = 0;
+
+            while (state > 0 && i < length) {
+                char ch = text.charAt(i++);
+                if(ch == 0) {
+                    continue;
+                }
+
+                int child = childState(state, ch);
+
+                if(child > 1 && check[child] > 0) {
+                    wordState = child;
+                    wordEnd = i;
+                }
+
+                state = child;
+            }
+
+            if(wordState > 1) {
+                WordEntry<PinyinInfo> wordEntry = data[check[wordState]];
+                Emit<PinyinInfo> emit = new Emit<>(wordEntry.getKeyword(), 0, wordEnd, wordEntry.getPayload());
+                return emit;
+            }
+            return null;
+        }
+
+    }
+
     // singleton
     private static final PinyinEngine instance = new PinyinEngine();
 
@@ -21,7 +61,7 @@ public class PinyinEngine {
 
 
     private Map<Integer, PinyinInfo> pinyinTable;
-    private DATAutomaton<PinyinInfo> automaton;
+    private PinyinAutomaton automaton;
 
     private PinyinEngine() {
 
@@ -65,7 +105,7 @@ public class PinyinEngine {
             }
 
             this.pinyinTable = pinyinMap;
-            this.automaton = builder.build();
+            this.automaton = new PinyinAutomaton(builder.build());
 
         } catch (Exception e) {
             // this should not happen
@@ -91,37 +131,12 @@ public class PinyinEngine {
      * @param text
      * @return
      */
-    public PinyinInfo parseFirstGreedyPinyin(CharSequence text) {
+    public Emit<PinyinInfo> parseFirstGreedyPinyin(CharSequence text) {
         if(text == null || text.length() == 0) {
             return null;
         }
 
-        class FirstGreedyMatchHandler implements MatchHandler<PinyinInfo> {
-
-            private int mostRight = 1;
-            private PinyinInfo firstGreedyPinyin;
-
-            @Override
-            public boolean onMatch(int start, int end, String key, PinyinInfo value) {
-                if(end > 6) {   // largest pinyin length
-                    return false;
-                } else {
-                    if(start == 0 && end > mostRight) {
-                        mostRight = end;
-                        firstGreedyPinyin = value;
-                    }
-                    return true;
-                }
-            }
-
-            public PinyinInfo getFirstGreedyMeet() {
-                return this.firstGreedyPinyin;
-            }
-        }
-
-        FirstGreedyMatchHandler matchHandler = new FirstGreedyMatchHandler();
-        this.automaton.parseText(text, matchHandler);
-        return matchHandler.getFirstGreedyMeet();
+        return this.automaton.parseFirstGreedyPinyin(text);
     }
 
     public PinyinInfo getInfoByCode(int id) {
@@ -130,15 +145,15 @@ public class PinyinEngine {
 
     public PinyinInfo getInfoByPinyin(String pinyin) {
 
-        PinyinInfo info = parseFirstGreedyPinyin(pinyin);
-        if(info == null) {
+        Emit<PinyinInfo> emit = parseFirstGreedyPinyin(pinyin);
+        if(emit == null) {
             return null;
         }
 
-        String text = info.getText();
+        String text = emit.getValue().getText();
 
         if(text.length() == pinyin.length()) {
-            return info;
+            return emit.getValue();
         }
 
         return null;
@@ -172,3 +187,5 @@ public class PinyinEngine {
     }
 
 }
+
+
