@@ -12,6 +12,9 @@ import java.util.*;
 
 public class PinyinEngine {
 
+    // 0x2C00 ~ 0x2E00 map pinyin codes to this area
+    private static final int PINYIN_AREA_START_CODE = 0x2C00;
+
     private static class PinyinAutomaton extends DATAutomaton<PinyinInfo> {
 
         protected PinyinAutomaton(DATAutomaton that) {
@@ -83,7 +86,7 @@ public class PinyinEngine {
 
             String line;
 
-            int id = 0xF700;  // 0xF700 ~ 0xF8FF is a reversed area in unicode, use this area for pinyin code here
+            int id = PINYIN_AREA_START_CODE;
 
             while ((line = bufferedReader.readLine()) != null) {
 

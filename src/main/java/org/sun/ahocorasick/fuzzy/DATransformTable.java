@@ -8,8 +8,8 @@ import java.util.*;
  */
 public class DATransformTable implements TransformTable {
     
-    private int[] base;
-    private int[] check;
+    private final int[] base;
+    private final int[] check;
 
     DATransformTable(int[] base, int[] check) {
         this.base = base;
@@ -60,8 +60,8 @@ public class DATransformTable implements TransformTable {
         return sb.toString();
     }
 
-    private int offsetInCheckValue(int value) {
-        return (value & 0x7fff0000) >> 16;
+    static int offsetInCheckValue(int value) {
+        return (value << 1) >> 17;
     }
 
     public static Builder builder() {
@@ -77,11 +77,43 @@ public class DATransformTable implements TransformTable {
 
         private int maxState = 1;
 
+        private int initCapacity;
+
         // 空闲列表，用于空间分配
         private TreeMap<Integer, Integer> freeList;
 
+
+        // statistics
+
+        private int rc_firstExtendLink = 0;
+        private int rc_extendLink = 0;
+        private int rc_placeFirstJump_fail = 0;
+        private int rc_placeFirstJump_base = 0;
+        private int rc_searchBaseAddressFail = 0;
+
+        private int resizeCount = 0;
+        public void printStatistics() {
+            int length = base.length;
+            int emptyCount = 0;
+            for (int i = 1; i < length; i++) {
+                if(base[i] == 0) {
+                    emptyCount ++;
+                }
+            }
+
+            System.out.println("DATransformTable: Length: " + length + ", EmptyCount: " + emptyCount +
+                    ", ResizeCount: " + resizeCount + ", rc_placeFirstJump_base: " + rc_placeFirstJump_base +
+                    ", rc_placeFirstJump_fail: " + rc_placeFirstJump_fail +
+                    ", rc_firstExtendLink: " + rc_firstExtendLink + ", rc_extendLink： " + rc_extendLink +
+                    ", rc_searchBaseAddressFail: " + rc_searchBaseAddressFail);
+        }
+
         private Builder() {
             transTable = new TreeMap<>();
+        }
+
+        public void setInitCapacity(int capacity) {
+            initCapacity = capacity;
         }
 
         public void putTransforms(int state, int source, CharSequence targets) {
@@ -115,11 +147,20 @@ public class DATransformTable implements TransformTable {
 
         public DATransformTable build() {
 
+            long t0 = System.currentTimeMillis();
             initDoubleArray();
+            long t1 = System.currentTimeMillis();
             placeAccessableChars();
+            long t2 = System.currentTimeMillis();
             placeAllLeftTransformChars();
+            long t3 = System.currentTimeMillis();
 
             DATransformTable result = new DATransformTable(base, check);
+
+            printStatistics();
+            System.out.println("initDoubleArray: " + (t1 - t0) +
+                    ", placeAccessableChars: " + (t2 - t1) +
+                    ", placeAllLeftTransformChars: " + (t3 - t2));
 
             this.base = null;
             this.check = null;
@@ -138,23 +179,33 @@ public class DATransformTable implements TransformTable {
             if(initCapacity < maxState) {
                 initCapacity = maxState + 1;
             }
+            if(initCapacity < this.initCapacity) {
+                initCapacity = this.initCapacity;
+            } else {
+                this.initCapacity = initCapacity;
+            }
 
             this.base = new int[initCapacity];
             this.check = new int[initCapacity];
 
+            freeList = new TreeMap<>();
+            freeList.put(1, initCapacity - 1);
+
             for (Integer state : transTable.keySet()) {
+                occupy(state);
                 check[state] = state;
             }
 
-
-            freeList = new TreeMap<>();
-            freeList.put(1, initCapacity - 1);
         }
 
+        /**
+         * Occupy an index and update free list
+         */
         private void occupy(int index) {
 
             Map.Entry<Integer, Integer> leEntry = freeList.lowerEntry(index + 1);
 
+            assert leEntry != null;
             assert leEntry.getValue() >= index;
 
             if(leEntry.getValue() < index) {
@@ -182,7 +233,8 @@ public class DATransformTable implements TransformTable {
 
         private void placeAccessableChars() {
 
-            for (Map.Entry<Integer, Map<Integer, CharSequence>> entry : transTable.entrySet()) {
+
+            for (Map.Entry<Integer, Map<Integer, CharSequence>> entry : ((TreeMap<Integer, Map<Integer, CharSequence>>) transTable).descendingMap().entrySet()) {
                 Integer state = entry.getKey();
                 Map<Integer, CharSequence> transformMap = entry.getValue();
 
@@ -197,16 +249,14 @@ public class DATransformTable implements TransformTable {
 
                 // fill base address
                 base[state] = baseAddress;
-                occupy(state);
-
 
                 // fill first char transform
                 transformMap.forEach((originChar, transformedChars) -> {
 
                     int targetIndex = base[state] + originChar;
+                    occupy(targetIndex);
                     base[targetIndex] = transformedChars.charAt(0); // only fill the first char
                     check[targetIndex] = state;
-                    occupy(targetIndex);
                 });
             }
 
@@ -218,8 +268,6 @@ public class DATransformTable implements TransformTable {
             for (Map.Entry<Integer, Map<Integer, CharSequence>> entry : transTable.entrySet()) {
                 Integer state = entry.getKey();
                 Map<Integer, CharSequence> transformMap = entry.getValue();
-
-                int baseAddress = base[state];
 
                 transformMap.forEach((originChar, transformedChars) -> {
 
@@ -234,19 +282,23 @@ public class DATransformTable implements TransformTable {
 
         private final static int CHECK_VALUE_LINK_TAIL = 1 << 31;
 
+        private final static int CHECK_OFFSET_MIN_VALUE = - (1 << 14);    // -2^14
+        private final static int CHECK_OFFSET_MAX_VALUE = (1 << 14) - 1;
+
 
         private void placeLeftTransformChars(int state, int originChar, CharSequence targetChars) {
             final int firstCharIndex = base[state] + originChar;
 
-            Integer currFreeIndex = freeList.higherKey(firstCharIndex + Short.MIN_VALUE);
+            Integer currFreeIndex = freeList.higherKey(firstCharIndex + Short.MIN_VALUE - 1);
 
             if(currFreeIndex == null) {
+                currFreeIndex = base.length;
                 int newCapacity = base.length + 1 + (targetChars.length() >> 1);
                 boolean resized = resize(newCapacity);
+                rc_firstExtendLink ++;
                 if(!resized) {
                     throw new RuntimeException("Unable to allocate proper slot.");
                 }
-                currFreeIndex = freeList.higherKey(firstCharIndex);
             }
 
             if(currFreeIndex - firstCharIndex > Short.MAX_VALUE) {
@@ -280,16 +332,17 @@ public class DATransformTable implements TransformTable {
 
                     if(ci < length) { // 存在更多字符？
 
-                        nextFreeIndex = freeList.higherKey(currFreeIndex);
+                        nextFreeIndex = freeList.higherKey(currFreeIndex + CHECK_OFFSET_MIN_VALUE - 1);
                         if(nextFreeIndex == null) {
+                            nextFreeIndex = base.length;  // 准备分配新空间
                             int newCapacity = base.length + 1 + ((length - ci) >> 1);
                             boolean resized = resize(newCapacity);
+                            rc_extendLink++;
                             if(!resized) {
                                 throw new RuntimeException("Unable to allocate next free slot.");
                             }
-                            nextFreeIndex = freeList.higherKey(currFreeIndex);
                         }
-                        if(nextFreeIndex - currFreeIndex > Short.MAX_VALUE) {
+                        if(nextFreeIndex - currFreeIndex > CHECK_OFFSET_MAX_VALUE) {
                             throw new RuntimeException("Unable to find next free slot.");
                         }
                         checkValue = ((nextFreeIndex - currFreeIndex) << 16) | checkValue;
@@ -308,6 +361,7 @@ public class DATransformTable implements TransformTable {
 
 
 
+        private final Random random = new Random();
         /**
          * find base address for state
          * @param state
@@ -323,54 +377,72 @@ public class DATransformTable implements TransformTable {
                 chars[i++] = ch;
             }
             Arrays.sort(chars);
-            int charRange = chars[chars.length - 1] - chars[0];
 
+            int[] diffs = new int[chars.length];
+            for (int j = 0; j < chars.length; j++) {
+                diffs[j] = chars[j] - chars[0];
+            }
+
+            //int randomLowBound = random.nextInt(30000);
 
             Map.Entry<Integer, Integer> firstEntry = freeList.firstEntry();
+            //Map.Entry<Integer, Integer> firstEntry = freeList.higherEntry(randomLowBound);
             int rangeStart = firstEntry.getKey();
             int rangeEnd = firstEntry.getValue();
             int baseIndex = rangeStart;
 
+            while (baseIndex < base.length) {
 
-            if(baseIndex + charRange >= base.length) {
-                boolean resized = resize(baseIndex + charRange + 1);
-                if(!resized) {
-                    return Integer.MAX_VALUE;
-                }
-            }
-
-            while (true) {
-
-                for (i = 0; i < chars.length; i++) {
-                    int detectIndex = baseIndex + chars[i] - chars[0];
-                    if (check[detectIndex] != 0) {
+                int j = 1;
+                int detectIndex = baseIndex;
+                while (j < diffs.length) {
+                    detectIndex = baseIndex + diffs[j];
+                    if(detectIndex < check.length && check[detectIndex] != 0) {
                         break;
                     }
+                    if(detectIndex >= check.length) {
+                        j = diffs.length;
+                        detectIndex = baseIndex + diffs[diffs.length - 1];
+                        break;
+                    }
+                    j++;
                 }
 
-                if(i >= chars.length) {
+                if(j >= diffs.length) { // ok
+                    if(detectIndex >= check.length) {
+                        int newCapacity = Math.max(base.length + (base.length >> 1), detectIndex + 1); // 至少扩为1.5倍，主要的扩容都发生在这里
+                        System.out.println("resize: " + base.length + " -> " + newCapacity);
+                        boolean resized = resize(newCapacity);
+                        rc_placeFirstJump_base ++;
+                        if(!resized) {
+                            return Integer.MAX_VALUE;
+                        }
+                    }
                     return baseIndex - chars[0];
                 }
 
-                baseIndex += 1;
+                baseIndex ++;
+                rc_searchBaseAddressFail ++;
                 if(baseIndex > rangeEnd) {
                     Map.Entry<Integer, Integer> nextFreeRange = freeList.higherEntry(rangeEnd);
+                    if(nextFreeRange == null) {
+                        baseIndex = base.length;
+                        break;
+                    }
                     rangeStart = nextFreeRange.getKey();
                     rangeEnd = nextFreeRange.getValue();
                     baseIndex = rangeStart;
                 }
-
-                int nextMaxIndex = baseIndex + charRange;
-
-
-                if(nextMaxIndex >= base.length) {
-                    if(!resize(nextMaxIndex + 1)) {
-                        break;
-                    }
-                }
             }
 
-            return Integer.MAX_VALUE;
+            // now we have:  baseIndex >= base.length
+            int maxDetectIndex = baseIndex + diffs[diffs.length - 1];
+            if(maxDetectIndex < 0 || !resize(maxDetectIndex + 1)) {
+                return Integer.MAX_VALUE;
+            }
+            rc_placeFirstJump_fail ++;
+
+            return baseIndex - chars[0];
         }
 
 
@@ -384,6 +456,8 @@ public class DATransformTable implements TransformTable {
             if(newCapacity <= base.length) {
                 return false;
             }
+
+            resizeCount++;
 
             int[] newBase = Arrays.copyOf(base, newCapacity);
             int[] newCheck = Arrays.copyOf(check, newCapacity);

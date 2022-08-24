@@ -77,34 +77,41 @@ public class FZHAutomaton<V> implements FuzzyAutomaton<V> {
             return this;
         }
 
+        private void postProcessTrie(Trie<V> trie) {
+
+            for (Map.Entry<String, WordItem<V>> entry : dataMap.entrySet()) {
+                String keyword = entry.getKey();
+                WordItem<V> item = entry.getValue();
+
+                if(!item.supportFussyMatch) {
+                    continue;
+                }
+
+                State<V> currState = trie.getRootState();
+
+                for (int i = 0; i < keyword.length(); i++) {
+                    char ch = keyword.charAt(i);
+                    State<V> child = currState.getSuccess().get(ch);
+                    assert child != null;
+                    child.putData(FUSSY_MATCH_FLAG, true);
+                    int pinyinCode = HanziDict.getInstance().getPinyinCode(ch);
+                    if(pinyinCode != ch) {
+                        currState.getSuccess().put((char) pinyinCode, child);
+                    }
+                    currState = child;
+                }
+
+            }
+
+        }
+
         private Trie<V> buildTrie() {
             final Trie<V> trie = new Trie<>();
-            BuildCallback<V> buildCallback = new BuildCallback<V>() {
-                @Override
-                public void onStateCreated(State<V> state, String word, State<V> parentState, char ch) {
-                }
-
-                @Override
-                public void onStateChecked(State<V> state, String word, State<V> parentState, char ch) {
-                    if(dataMap.get(word).supportFussyMatch) {
-                        state.putData(FUSSY_MATCH_FLAG, true);
-                        int pinyinCode = HanziDict.getInstance().getPinyinCode(ch);
-                        if(pinyinCode != ch) {
-                            parentState.getSuccess().put((char) pinyinCode, state);
-                        }
-                    }
-                }
-
-                @Override
-                public void onWordAdded(State<V> state, String word) {
-                }
-            };
-
-            trie.setCallback(buildCallback);
             dataMap.forEach((key, item) -> {
                 trie.putKeyword(key, item.value);
             });
             trie.constructFailureAndPrevWordPointer();
+            postProcessTrie(trie);
             return trie;
         }
 

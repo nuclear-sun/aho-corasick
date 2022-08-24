@@ -112,6 +112,18 @@ public class FZHAutomatonTest {
         assertEquals(list3.size(), 2);
     }
 
+    @Test
+    public void testPos2() {
+        FZHAutomaton.Builder builder = FZHAutomaton.builder();
+        builder.put("容易", null, true)
+                .put("易学习", null, true)
+                .put("以为", null, true);
+        FZHAutomaton automaton = builder.build();
+        List list = automaton.fussyParseText("小明容易学系，并且yiwei做出难题事xiy为尝的事情。");
+        System.out.println(list);
+
+    }
+
 
     @Test
     public void testPosition() {
@@ -127,6 +139,9 @@ public class FZHAutomatonTest {
 
         final String text = "小明容易学系，并且yiwei做出难题事xiy为尝的事情。";
         List<Emit> list = automaton.fussyParseText(text);
+
+        System.out.println(list);
+
         Emit emit0 = list.get(0);
         assertEquals(emit0.getStart(), 2);
         assertEquals(emit0.getEnd(), 4);
@@ -202,7 +217,7 @@ public class FZHAutomatonTest {
         FZHAutomaton.Builder builder = FZHAutomaton.builder();
         FZHAutomaton automaton = null;
 
-        InputStream resourceAsStream = getClass().getResourceAsStream("/sensitive.txt");
+        InputStream resourceAsStream = getClass().getResourceAsStream("/sensitive_test.txt");
         BufferedReader bufferedReader = null;
 
         int count = 0;

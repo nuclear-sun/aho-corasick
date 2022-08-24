@@ -69,7 +69,7 @@ public class Trie<V> implements Automaton<V> {
         return currState;
     }
 
-    State getRootState() {
+    public State getRootState() {
         return this.root;
     }
 
