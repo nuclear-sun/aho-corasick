@@ -4,10 +4,13 @@ import org.sun.ahocorasick.State;
 import org.sun.ahocorasick.Trie;
 import org.sun.ahocorasick.fuzzy.DATransformTable;
 import org.sun.ahocorasick.fuzzy.TransformTable;
+import org.sun.ahocorasick.zhtools.HanziDict;
 import org.sun.ahocorasick.zhtools.PinyinSimTable;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static org.sun.ahocorasick.fussyzh.Constants.FUSSY_MATCH_FLAG;
 
@@ -27,9 +30,15 @@ public class PinyinTransTable implements TransformTable {
 
             Map<Character, ? extends State<?>> childrenMap = state.getSuccess();
 
+            // 处理同一个状态下相同拼音，如存在词库： [以为, 易学习], 这种情况无法直接在前缀树上添加拼音编码
+            Map<Integer, StringBuilder> samePinyinSet = new HashMap<>();
+
             for (Map.Entry<Character, ? extends State<?>> entry : childrenMap.entrySet()) {
                 Character ch = entry.getKey();
                 State childState = entry.getValue();
+                if(!HanziDict.isBMPChineseChar(ch)) {
+                    continue;
+                }
 
                 Boolean supportFuzzyMatch = (Boolean) childState.getData(FUSSY_MATCH_FLAG);
 
@@ -38,7 +47,17 @@ public class PinyinTransTable implements TransformTable {
                 }
 
                 // TODO 这里对于非 BMP 字符是没有考虑的
-                CharSequence similarChars = simTable.getSimilarPinyinOrHeadCharByCode(ch); // 这里是不同的地方
+                int pinyinCode = HanziDict.getInstance().getPinyinCode(ch);
+
+                // 处理同一个状态下相同拼音，如存在词库： [以为, 易学习], 这种情况无法直接在前缀树上添加拼音编码
+                StringBuilder sameCharSet = samePinyinSet.get(pinyinCode);
+                if(sameCharSet == null) {
+                    sameCharSet = new StringBuilder();
+                    samePinyinSet.put(pinyinCode, sameCharSet);
+                }
+                sameCharSet.append(ch);
+
+                CharSequence similarChars = simTable.getSimilarPinyinOrHeadCharByCode(pinyinCode); // 这里是不同的地方
                 if(similarChars != null) {
                     for (int i = 0, length = similarChars.length(); i < length; i++) {
                         char c = similarChars.charAt(i);
@@ -51,6 +70,12 @@ public class PinyinTransTable implements TransformTable {
                     }
                 }
             }
+
+            samePinyinSet.forEach((pinyinCode, charSet) -> {
+                if(charSet.length() > 1) {
+                    rawTransMap.put(pinyinCode, charSet);
+                }
+            });
 
             builder.putTransforms(state.getOrdinal(), rawTransMap);
         });

@@ -1,6 +1,7 @@
 package org.sun.ahocorasick.fussyzh;
 
 import org.sun.ahocorasick.Emit;
+import org.sun.ahocorasick.Trie;
 import org.testng.annotations.Test;
 
 import java.io.BufferedReader;
@@ -246,5 +247,56 @@ public class FZHAutomatonTest {
         System.out.println("Added " + count + " words");
 
     }
+
+    @Test
+    public void testPostProcessTrie() {
+
+        FZHAutomaton.Builder builder = FZHAutomaton.builder();
+        builder.put("edg", true)
+                .put("amazon", true)
+                .put("一定", true);
+        builder.build();
+
+    }
+
+    @Test
+    public void testSimilarPinyin() {
+
+        FZHAutomaton.Builder builder = FZHAutomaton.builder();
+        builder.put("简单", null, true)
+                .put("amazon", null, true);
+        FZHAutomaton automaton = builder.build();
+        List<Emit> list = automaton.fussyParseText("这很吉单啊");
+        assertEquals(list.size(), 1);
+        assertEquals(list.get(0).getKeyword(), "简单");
+    }
+
+    @Test
+    public void testSamePinyinUnderOneNode() {
+
+        FZHAutomaton.Builder builder = FZHAutomaton.builder();
+        builder.put("易学习", null, true)
+                .put("以为", null, true);
+        FZHAutomaton automaton = builder.build();
+        List<Emit> list = automaton.fussyParseText("义学习已为今天不上课");
+        assertEquals(list.size(), 2);
+        assertEquals(list.get(0).getKeyword(), "易学习");
+        assertEquals(list.get(1).getKeyword(), "以为");
+
+        FZHAutomaton.Builder builder2 = FZHAutomaton.builder();
+        builder2.put("易学习", null, true)
+                .put("以为", null, true)
+                .put("激发", null, true)
+                .put("机会", null, true)
+                .put("技术要领", null, true);
+        FZHAutomaton automaton2 = builder2.build();
+
+        List<Emit> list2 = automaton2.fussyParseText("依学习意味只要激发了自己的潜能，就能把握基数要lin, 把握人生的机会。");
+        assertEquals(list2.size(), 5);
+        assertEquals(list2.get(2).getKeyword(), "激发");
+        assertEquals(list2.get(4).getEnd(), 35);
+    }
+
+
 
 }

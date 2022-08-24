@@ -96,12 +96,7 @@ public class PinyinEngine {
                 PinyinInfo pinyinInfo = new PinyinInfo();
                 pinyinInfo.setText(pinyin);
 
-                id++;
-                if(pinyin.length() == 1) {
-                    pinyinInfo.setCode(pinyin.charAt(0));
-                } else {
-                    pinyinInfo.setCode(id);
-                }
+                pinyinInfo.setCode(++id);
 
                 builder.put(pinyin, pinyinInfo);
                 pinyinMap.put(pinyinInfo.getCode(), pinyinInfo);

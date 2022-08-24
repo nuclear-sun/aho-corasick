@@ -3,6 +3,7 @@ ai
 an
 ang
 ao
+b
 ba
 bai
 ban
@@ -20,6 +21,7 @@ bin
 bing
 bo
 bu
+c
 ca
 cai
 can
@@ -56,6 +58,7 @@ cuan
 cui
 cun
 cuo
+d
 da
 dai
 dan
@@ -85,6 +88,7 @@ ei
 en
 eng
 er
+f
 fa
 fan
 fang
@@ -95,6 +99,7 @@ fiao
 fo
 fou
 fu
+g
 ga
 gai
 gan
@@ -114,6 +119,7 @@ guang
 gui
 gun
 guo
+h
 ha
 hai
 han
@@ -135,6 +141,7 @@ huang
 hui
 hun
 huo
+j
 ji
 jia
 jian
@@ -149,6 +156,7 @@ ju
 juan
 jue
 jun
+k
 ka
 kai
 kan
@@ -168,6 +176,7 @@ kuang
 kui
 kun
 kuo
+l
 la
 lai
 lan
@@ -245,6 +254,7 @@ nv
 nve
 o
 ou
+p
 pa
 pai
 pan
@@ -262,6 +272,7 @@ ping
 po
 pou
 pu
+q
 qi
 qia
 qian
@@ -276,6 +287,7 @@ qu
 quan
 que
 qun
+r
 ran
 rang
 rao
@@ -291,6 +303,7 @@ ruan
 rui
 run
 ruo
+s
 sa
 sai
 san
@@ -326,6 +339,7 @@ suan
 sui
 sun
 suo
+t
 ta
 tai
 tan
@@ -346,6 +360,7 @@ tuan
 tui
 tun
 tuo
+w
 wa
 wai
 wan
@@ -356,6 +371,7 @@ weng
 wo
 wong
 wu
+x
 xi
 xia
 xian
@@ -370,6 +386,7 @@ xu
 xuan
 xue
 xun
+y
 ya
 yan
 yang
@@ -385,6 +402,7 @@ yu
 yuan
 yue
 yun
+z
 za
 zai
 zan

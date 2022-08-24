@@ -6,7 +6,9 @@ import org.sun.ahocorasick.fuzzy.FuzzyDATAutomaton;
 import org.sun.ahocorasick.zhtools.HanziDict;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static org.sun.ahocorasick.fussyzh.Constants.FUSSY_MATCH_FLAG;
 
@@ -77,7 +79,11 @@ public class FZHAutomaton<V> implements FuzzyAutomaton<V> {
             return this;
         }
 
-        private void postProcessTrie(Trie<V> trie) {
+        // open for test
+        void postProcessTrie(Trie<V> trie) {
+
+            // 记录同一节点下相同的拼音编码，这种情况使用近似拼音技术解决，本节点不再添加拼音弧
+            final Map<State<V>, Set<Character>> removeSet = new HashMap<>();
 
             for (Map.Entry<String, WordItem<V>> entry : dataMap.entrySet()) {
                 String keyword = entry.getKey();
@@ -93,16 +99,33 @@ public class FZHAutomaton<V> implements FuzzyAutomaton<V> {
                     char ch = keyword.charAt(i);
                     State<V> child = currState.getSuccess().get(ch);
                     assert child != null;
+
                     child.putData(FUSSY_MATCH_FLAG, true);
                     int pinyinCode = HanziDict.getInstance().getPinyinCode(ch);
-                    if(pinyinCode != ch) {
+
+                    if(pinyinCode != ch) {  // 有效的拼音编码
+                        if(currState.getSuccess().containsKey((char) pinyinCode)) {   // 该状态下存在重复的拼音
+                            Set<Character> duplicatePinyinSet = removeSet.get(currState);
+                            if(duplicatePinyinSet == null) {
+                                duplicatePinyinSet = new HashSet<>();
+                                removeSet.put(currState, duplicatePinyinSet);
+                            }
+                            duplicatePinyinSet.add((char) pinyinCode);
+                        }
                         currState.getSuccess().put((char) pinyinCode, child);
                     }
                     currState = child;
                 }
-
             }
 
+            // 清楚拼音弧边
+            for (Map.Entry<State<V>, Set<Character>> duplicateEntry : removeSet.entrySet()) {
+                State<V> state = duplicateEntry.getKey();
+                Set<Character> duplicatePinyinCodes = duplicateEntry.getValue();
+                for (Character pinyinCode : duplicatePinyinCodes) {
+                    state.getSuccess().remove(pinyinCode);
+                }
+            }
         }
 
         private Trie<V> buildTrie() {
