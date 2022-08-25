@@ -67,23 +67,7 @@ public class TrieTest {
     @Test
     public void testArch() {
 
-        BuildCallback addArchCallback = new BuildCallback() {
-            @Override
-            public void onStateCreated(State state, String word, State parentState, char ch) {
-            }
-
-            @Override
-            public void onStateChecked(State state, String word, State parentState, char ch) {
-                parentState.getSuccess().put((char)(ch+2), state);
-            }
-
-            @Override
-            public void onWordAdded(State state, String word) {
-            }
-        };
-
         Trie trie1 = new Trie();
-        trie1.setCallback(addArchCallback);
         trie1.addKeyword("小明");
         Map<Character, State> success = trie1.getRootState().getSuccess();
         assertEquals(success.size(), 2);

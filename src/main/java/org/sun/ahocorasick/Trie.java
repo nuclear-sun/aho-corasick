@@ -14,8 +14,6 @@ public class Trie<V> implements Automaton<V> {
     // whether constructed as an ac automaton
     private boolean linked;
 
-    private BuildCallback<V> callback;
-
     public Trie() {
         this.root = new State();
     }
@@ -26,10 +24,6 @@ public class Trie<V> implements Automaton<V> {
 
     public int getKeywordCount() {
         return keywordCount;
-    }
-
-    public void setCallback(BuildCallback<V> callback) {
-        this.callback = callback;
     }
 
     public State addKeyword(final String keyword) {
@@ -48,14 +42,8 @@ public class Trie<V> implements Automaton<V> {
                 childState = new State();
                 currState.getSuccess().put(ch, childState);
                 this.stateCount++;
-                if(callback != null) {
-                    callback.onStateCreated(childState, keyword, currState, ch);
-                }
             }
 
-            if(callback != null) {
-                callback.onStateChecked(childState, keyword, currState, ch);
-            }
             currState = childState;
         }
         if(currState.getKeyword() == null) {
@@ -63,9 +51,7 @@ public class Trie<V> implements Automaton<V> {
         }
         currState.setKeyword(keyword);
         currState.setPayload(value);
-        if(callback != null) {
-            callback.onWordAdded(currState, keyword);
-        }
+
         return currState;
     }
 

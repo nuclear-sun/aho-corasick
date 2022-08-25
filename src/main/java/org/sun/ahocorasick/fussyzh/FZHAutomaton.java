@@ -140,6 +140,7 @@ public class FZHAutomaton<V> implements FuzzyAutomaton<V> {
 
         public FZHAutomaton build() {
 
+            long t1 = System.currentTimeMillis();
             final Trie<V> trie = buildTrie();
             builder.setWordInfoCallback((state, wordEntry) -> {
                 Boolean fuzzyMatch = (Boolean) state.getData(FUSSY_MATCH_FLAG);
@@ -147,11 +148,25 @@ public class FZHAutomaton<V> implements FuzzyAutomaton<V> {
                     wordEntry.setWordMetaFlags(1);
                 }
             });
-            DATAutomaton<V> datAutomaton = builder.buildFromTrie(trie);
+
+            long t2 = System.currentTimeMillis();
+            System.out.println("Trie complete: " + (t2 - t1));
 
             ShapeTransTable shapeTransTable = new ShapeTransTable(trie);
+
+            long t3 = System.currentTimeMillis();
+            System.out.println("ShapeTransTable complete: " + (t3 - t2));
+
             PinyinTransTable pinyinTransTable = new PinyinTransTable(trie);
+            long t4 = System.currentTimeMillis();
+            System.out.println("PinyinTransTable complete: " + (t4 - t3));
+
             ComplexTransformer complexTransformer = new ComplexTransformer(shapeTransTable, pinyinTransTable);
+
+            DATAutomaton<V> datAutomaton = builder.buildFromTrie(trie);
+            long t5 = System.currentTimeMillis();
+            System.out.println("DATAutomaton complete: " + (t5 - t4));
+
             FuzzyDATAutomaton<V> fuzzyDATAutomaton = new FuzzyDATAutomaton<>(datAutomaton, complexTransformer);
 
             return new FZHAutomaton(fuzzyDATAutomaton);
