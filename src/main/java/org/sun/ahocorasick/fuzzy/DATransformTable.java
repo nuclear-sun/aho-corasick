@@ -289,7 +289,7 @@ public class DATransformTable implements TransformTable {
         private void placeLeftTransformChars(int state, int originChar, CharSequence targetChars) {
             final int firstCharIndex = base[state] + originChar;
 
-            Integer currFreeIndex = freeList.higherKey(firstCharIndex + Short.MIN_VALUE - 1);
+            Integer currFreeIndex = freeList.higherKey(firstCharIndex + (Short.MIN_VALUE >> 4));
 
             if(currFreeIndex == null) {
                 currFreeIndex = base.length;
@@ -332,7 +332,7 @@ public class DATransformTable implements TransformTable {
 
                     if(ci < length) { // 存在更多字符？
 
-                        nextFreeIndex = freeList.higherKey(currFreeIndex + CHECK_OFFSET_MIN_VALUE - 1);
+                        nextFreeIndex = freeList.higherKey(currFreeIndex + random.nextInt(10000));
                         if(nextFreeIndex == null) {
                             nextFreeIndex = base.length;  // 准备分配新空间
                             int newCapacity = base.length + 1 + ((length - ci) >> 1);
@@ -383,12 +383,33 @@ public class DATransformTable implements TransformTable {
                 diffs[j] = chars[j] - chars[0];
             }
 
+            Map.Entry<Integer, Integer> firstEntry = freeList.firstEntry();
+            Map.Entry<Integer, Integer> lastEntry = freeList.lastEntry();
+
+            if(firstEntry == null || lastEntry == null) {
+                int result = base.length;
+                int newCapacity = Math.max(base.length + (base.length >> 1), base.length + chars[chars.length - 1]);
+                resize(newCapacity);
+                return result;
+            }
+
+            int startPosition = (firstEntry.getKey() + lastEntry.getKey()) >> 1;
+
+
+
             //int randomLowBound = random.nextInt(30000);
 
-            Map.Entry<Integer, Integer> firstEntry = freeList.firstEntry();
-            //Map.Entry<Integer, Integer> firstEntry = freeList.higherEntry(randomLowBound);
-            int rangeStart = firstEntry.getKey();
-            int rangeEnd = firstEntry.getValue();
+            //Map.Entry<Integer, Integer> startEntry = freeList.startEntry();
+            Map.Entry<Integer, Integer> startEntry = freeList.higherEntry(startPosition);
+
+            if(startEntry == null) {
+                int newCapacity = Math.max(base.length + (base.length >> 1), base.length + chars[chars.length - 1]);
+                resize(newCapacity);
+                startEntry = freeList.higherEntry(startPosition);
+            }
+
+            int rangeStart = startEntry.getKey();
+            int rangeEnd = startEntry.getValue();
             int baseIndex = rangeStart;
 
             while (baseIndex < base.length) {
