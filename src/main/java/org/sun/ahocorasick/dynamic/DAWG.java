@@ -4,21 +4,30 @@ import java.util.*;
 
 public class DAWG {
 
+
     private static class Node {
 
-        private static int idGenerator = 0;
+        private static int idGenerator = 1;
 
-        private String id;
-        private Map<Character, Edge> children;
-        private Node slink;
+        final int id;
+        Map<Character, Edge> children;
+        Node slink;
+        boolean isTrunk;
+        String word;
 
-        public Node(String id) {
+        public Node(int id) {
             this.id = id;
             children = new HashMap<>();
+            isTrunk = false;
         }
 
         public Node() {
-            this(String.valueOf(idGenerator++));
+            this(idGenerator++);
+        }
+
+        public Node trans(char ch) {
+            Edge edge = children.get(ch);
+            return edge == null ? null : edge.target;
         }
 
         @Override
@@ -26,13 +35,14 @@ public class DAWG {
             return "{" +
                     "id='" + id + '\'' +
                     ", children=" + children +
-                    ", slink=" + slink +
+                    ", slink=" + (slink == null ? slink : slink.id) +
+                    ", isTrunk=" + isTrunk +
                     '}';
         }
     }
     private static class Edge {
-        private boolean isPrimary;
-        private Node target;
+        boolean isPrimary;
+        Node target;
         public Edge(Node target, boolean isPrimary) {
             this.target = target;
             this.isPrimary = isPrimary;
@@ -47,8 +57,14 @@ public class DAWG {
         }
     }
 
-    private final Node source = new Node();
+    private final Node source;
 
+    public DAWG() {
+        source = new Node();
+        source.isTrunk = true;
+    }
+
+    // dynamic insertion
     public void addWords(Collection<String> words) {
         for (String word : words) {
             addWord(word);
@@ -60,24 +76,23 @@ public class DAWG {
         for (int i = 0; i < word.length(); i++) {
             activeNode = update(activeNode, word.charAt(i));
         }
+        activeNode.word = word;
     }
 
     public void printAllNodes() {
         Set<Node> visited = new HashSet<>();
         Queue<Node> queue = new LinkedList<>();
-        visited.add(source);
         queue.add(source);
         while (!queue.isEmpty()) {
             Node node = queue.poll();
-
-            System.out.println(node);
+            if(!visited.contains(node)) {
+                System.out.println(node);
+                visited.add(node);
+            }
 
             for (Edge value : node.children.values()) {
                 Node child = value.target;
-                if(!visited.contains(child)) {
-                    queue.offer(child);
-                    visited.add(child);
-                }
+                queue.offer(child);
             }
         }
     }
@@ -90,10 +105,13 @@ public class DAWG {
             if(edge.isPrimary) {
                 return newActiveNode;
             } else {
-                return split(activeNode, a, newActiveNode);
+                newActiveNode = split(activeNode, a, newActiveNode);
+                newActiveNode.isTrunk = true;
+                return newActiveNode;
             }
         } else {
             newActiveNode = new Node();
+            newActiveNode.isTrunk = true;
             activeNode.children.put(a, new Edge(newActiveNode, true));
             Node currentNode = activeNode, suffixNode = null;
 
@@ -120,7 +138,10 @@ public class DAWG {
 
     private Node split(Node parentNode, Character a, Node childNode) {
         Node newChildNode = new Node();
-        parentNode.children.get(a).target = newChildNode;
+        Edge parentToChild = parentNode.children.get(a);
+        assert parentToChild.target == childNode && parentToChild.isPrimary == false;
+        parentToChild.target = newChildNode;
+        parentToChild.isPrimary = true;
         for(Map.Entry<Character, Edge> entry: childNode.children.entrySet()) {
             newChildNode.children.put(entry.getKey(), new Edge(entry.getValue().target, false));
         }
@@ -138,10 +159,88 @@ public class DAWG {
         return newChildNode;
     }
 
+    private Set<String> collect(Node node) {
+        Set<String> results = new HashSet<>();
+        Node s = node;
+        while (s != source) {
+            if(s.isTrunk && s.word != null) {
+                results.add(s.word);
+            }
+            s = s.slink;
+        }
+        return results;
+    }
+
+    public void parse(String text) {
+        Node node = source;
+        for (int i = 0; i < text.length(); i++) {
+
+            char ch = text.charAt(i);
+            if (checkTransition(node, ch)) {
+                node = node.trans(ch);
+            } else {
+                Node s = node.slink;
+                while (s != null && !checkTransition(s, ch)) {
+                    s = s.slink;
+                }
+                if(s == null) {
+                    node = source;
+                    continue; // abandon this char
+                } else {
+                    node = s.trans(ch);
+                }
+            }
+
+            if(node != source) {
+                Set<String> words = collect(node);
+                if(!words.isEmpty()) {
+                    System.out.println(i + ":" + words);
+                }
+            }
+        }
+    }
+
+    public Set<Node> search(String text) {
+
+        Set<Node> outputs = new HashSet<>();
+
+        Node activeNode = source;
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i);
+            while (checkTransition(activeNode, ch) && activeNode != source) {
+                activeNode = activeNode.slink;
+            }
+            if(checkTransition(activeNode, ch)) {
+                activeNode = activeNode.trans(ch);
+            }
+            Node outNode = activeNode;
+            while (outNode != source) {
+                if(outNode.word != null && outNode.isTrunk) {
+                    outputs.add(outNode);
+                }
+                outNode = outNode.slink;
+            }
+        }
+
+        return outputs;
+    }
+
+    private boolean checkTransition(Node node, Character c) {
+        if(!node.isTrunk) return false;
+        Edge edge = node.children.get(c);
+        if(edge == null) return false;
+        if(!edge.isPrimary) return false;
+        if(!edge.target.isTrunk) return false;
+        return true;
+    }
+
     public static void main(String[] args) {
         DAWG dawg = new DAWG();
         dawg.addWord("abba");
+        dawg.addWord("aca");
+        dawg.addWord("cbb");
 
-        dawg.printAllNodes();
+        dawg.parse("cbbabbaca");
+
     }
 }
