@@ -1,8 +1,21 @@
-package org.sun.ahocorasick;
+package com.helipy.text.ahocorasick;
 
-import java.util.*;
+import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 
-public class DATAutomaton<V> implements Automaton<V> {
+/**
+ * @param <V> The related object type
+ * @author nuclear-sun
+ */
+public final class DatAutomaton<V> implements Automaton<V> {
 
     private static final int MAX_KEYWORD_LENGTH = 1000;
     private static final int ANCHOR_DEQUE_CLEAN_THRESHOLD = 20;
@@ -15,13 +28,17 @@ public class DATAutomaton<V> implements Automaton<V> {
 
     private final int stateCount;
 
-    // redundant data
+    /**
+     * redundant data
+     */
     private final int reserveLength;
 
-    // controls
+    /**
+     * controls
+     */
     private final boolean interruptable;
 
-    private DATAutomaton(int[] base, int[] check, Tuple<String, V>[] data, int stateCount, boolean interruptable) {
+    private DatAutomaton(int[] base, int[] check, Tuple<String, V>[] data, int stateCount, boolean interruptable) {
         this.base = base;
         this.check = check;
         this.data = data;
@@ -31,19 +48,42 @@ public class DATAutomaton<V> implements Automaton<V> {
         this.interruptable = interruptable;
     }
 
+    static int calcStart(final Deque<Tuple<Integer, Integer>> anchorQueue, final int end, final int wordLength) {
+
+        int ignoreChars = 0;
+
+        Iterator<Tuple<Integer, Integer>> tupleIterator = anchorQueue.descendingIterator();
+
+        while (tupleIterator.hasNext()) {
+            Tuple<Integer, Integer> anchor = tupleIterator.next();
+
+            if (end - anchor.first - ignoreChars >= wordLength) {
+                break;
+            }
+            ignoreChars += anchor.second;
+        }
+
+        return end - wordLength - ignoreChars + 1;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
     private int nextState(int currState, char ch) {
 
-        int nextState = 0, index;
+        int nextState = 0;
+        int index;
 
         do {
             index = base[currState] + ch;
-            if(index >= reserveLength && index < base.length && check[index] == currState) {
+            if (index >= reserveLength && index < base.length && check[index] == currState) {
                 nextState = base[index];
                 return nextState;
             }
 
             currState = base[currState + stateCount];
-            if(currState == 0) {
+            if (currState == 0) {
                 return 1;
             }
 
@@ -52,7 +92,6 @@ public class DATAutomaton<V> implements Automaton<V> {
         // this line should never be reached
         return 1;
     }
-
 
     /**
      * @param state the state to study
@@ -77,31 +116,19 @@ public class DATAutomaton<V> implements Automaton<V> {
 
         return collector;
     }
+    // CHECKSTYLE:ON
 
-    // open for test
-    static int calcStart(final Deque<Tuple<Integer, Integer>> anchorQueue, final int end, final int wordLength) {
-
-        int ignoreChars = 0;
-
-        Iterator<Tuple<Integer, Integer>> tupleIterator = anchorQueue.descendingIterator();
-
-        while (tupleIterator.hasNext()) {
-            Tuple<Integer, Integer> anchor = tupleIterator.next();
-
-            if(end - anchor.first - ignoreChars >= wordLength) {
-                break;
-            }
-            ignoreChars += anchor.second;
-        }
-
-        return end - wordLength - ignoreChars + 1;
-    }
-
-
+    /**
+     * // CHECKSTYLE:OFF
+     *
+     * @param text    text to scan
+     * @param handler how to handle matched keyword
+     */
     @Override
+    @SuppressWarnings("checkstyle:ReturnCount")
     public void parseText(CharSequence text, MatchHandler<V> handler) {
 
-        if(text == null || handler == null) {
+        if (text == null || handler == null) {
             return;
         }
 
@@ -116,26 +143,27 @@ public class DATAutomaton<V> implements Automaton<V> {
 
             final char ch = text.charAt(i);
 
-            if(ch == 0) {  // treat '\0' as the only special case to ignore
+            if (ch == 0) {
+                // treat '\0' as the only special case to ignore
                 totalIgnoreChars += 1;
 
-                Tuple<Integer, Integer> last;
-                if(anchorDeque.size() == 0 || (last = anchorDeque.getLast()).first != i - 1) {
+                Tuple<Integer, Integer> last = anchorDeque.peekLast();
+                if (anchorDeque.isEmpty() || last.first != i - 1) {
                     Tuple<Integer, Integer> newItem = new Tuple<>(i, 1);
                     anchorDeque.offerLast(newItem);
 
                     // clean anchorDeque when new item added
-                    if(anchorDeque.size() > ANCHOR_DEQUE_CLEAN_THRESHOLD) {
-                        Tuple<Integer, Integer> firstItem;
-                        while (anchorDeque.size() > 1 &&
-                                i - (firstItem = anchorDeque.getFirst()).first -
-                                        (totalIgnoreChars - firstItem.second) >= MAX_KEYWORD_LENGTH) {
+                    if (anchorDeque.size() > ANCHOR_DEQUE_CLEAN_THRESHOLD) {
+                        Tuple<Integer, Integer> firstItem = anchorDeque.peekFirst();
+                        while (anchorDeque.size() > 1
+                                && i - firstItem.first - (totalIgnoreChars - firstItem.second) >= MAX_KEYWORD_LENGTH) {
                             totalIgnoreChars -= firstItem.second;
                             anchorDeque.removeFirst();
                         }
                     }
 
-                } else {                 //   last != null && i == last.getFirst() + 1
+                } else {
+                    // last != null && i == last.getFirst() + 1
                     last.first = i;
                     last.second += 1;
                 }
@@ -148,22 +176,26 @@ public class DATAutomaton<V> implements Automaton<V> {
 
             List<Integer> outputs = collectWords(currState);
 
-            if(outputs != null) {
+            if (outputs != null) {
                 for (Integer index : outputs) {
 
                     Tuple<String, V> datum = this.data[index];
                     int start = calcStart(anchorDeque, i, datum.first.length());
                     boolean isContinue = handler.onMatch(start, i + 1, datum.first, datum.second);
-                    if(!isContinue) return;
+                    if (!isContinue) {
+                        return;
+                    }
                 }
             }
 
-            if(this.interruptable && Thread.currentThread().isInterrupted()) return;
+            if (this.interruptable && Thread.currentThread().isInterrupted()) {
+                return;
+            }
         }
 
     }
 
-
+    @Override
     public List<Emit<V>> parseText(CharSequence text) {
 
         List<Emit<V>> results = new LinkedList<>();
@@ -180,12 +212,6 @@ public class DATAutomaton<V> implements Automaton<V> {
         parseText(text, listener);
 
         return results;
-    }
-
-
-
-    public static Builder builder() {
-        return new Builder();
     }
 
     // methods for statistics
@@ -217,19 +243,19 @@ public class DATAutomaton<V> implements Automaton<V> {
         return count;
     }
 
-    public void printStats(boolean detail) {
+    public void printStats(boolean detail, PrintStream out) {
 
-        System.out.println("words: " + data.length);
-        System.out.println("stateCount: " + stateCount);
-        System.out.println("capacity: " + base.length);
-        System.out.println("freeSlots: " + countFreeSlots());
+        out.println("words: " + data.length);
+        out.println("stateCount: " + stateCount);
+        out.println("capacity: " + base.length);
+        out.println("freeSlots: " + countFreeSlots());
 
-        if(detail) {
-            System.out.println();
+        if (detail) {
+            out.println();
 
-            System.out.println("index & base & check");
+            out.println("index & base & check");
             for (int i = 0; i < base.length; i++) {
-                System.out.printf("%5d %5d %5d\n", i, base[i], check[i]);
+                out.printf("%5d %5d %5d%n", i, base[i], check[i]);
             }
         }
     }
@@ -239,14 +265,14 @@ public class DATAutomaton<V> implements Automaton<V> {
         private V1 first;
         private V2 second;
 
-        public Tuple(V1 first, V2 second) {
+        Tuple(V1 first, V2 second) {
             this.first = first;
             this.second = second;
         }
     }
 
 
-    public static class Builder<V> {
+    public static final class Builder<V> {
 
         private int[] base;
 
@@ -298,7 +324,7 @@ public class DATAutomaton<V> implements Automaton<V> {
             return this;
         }
 
-        public DATAutomaton<V> build() {
+        public DatAutomaton<V> build() {
 
             prepareData();
             buildTrie();
@@ -306,7 +332,7 @@ public class DATAutomaton<V> implements Automaton<V> {
             initDoubleArray();
             placeAllStateInfo();
 
-            return new DATAutomaton<V>(base, check, data, stateCount, interruptable);
+            return new DatAutomaton<V>(base, check, data, stateCount, interruptable);
         }
 
 
@@ -325,14 +351,14 @@ public class DATAutomaton<V> implements Automaton<V> {
 
         private void buildTrie() {
 
-            Trie trie = new Trie();
+            Trie trieTmp = new Trie();
 
             for (int i = 1; i < data.length; i++) {
-                trie.addKeyword(data[i].first);
+                trieTmp.addKeyword(data[i].first);
             }
 
-            trie.constructFailureAndPrevWordPointer();
-            this.trie = trie;
+            trieTmp.constructFailureAndPrevWordPointer();
+            this.trie = trieTmp;
         }
 
         private void initDoubleArray() {
@@ -346,11 +372,11 @@ public class DATAutomaton<V> implements Automaton<V> {
             final int firstFreeIndex = (stateCount << 1) + 1;
             final int lastFreeIndex = initCapacity - 1;
 
-            check[0] = - firstFreeIndex;
-            base[0] = - lastFreeIndex;
+            check[0] = -firstFreeIndex;
+            base[0] = -lastFreeIndex;
             for (int i = firstFreeIndex; i < initCapacity; i++) {
                 check[i] = -(i + 1);
-                base[i] = - (i - 1);
+                base[i] = -(i - 1);
             }
             check[lastFreeIndex] = 0;
             base[firstFreeIndex] = 0;
@@ -359,7 +385,7 @@ public class DATAutomaton<V> implements Automaton<V> {
 
         private void resize(int newCapacity) {
 
-            if(newCapacity <= this.base.length) {
+            if (newCapacity <= this.base.length) {
                 return;
             }
 
@@ -372,13 +398,13 @@ public class DATAutomaton<V> implements Automaton<V> {
             // build free list
             for (int i = check.length; i < newCapacity; i++) {
                 newCheck[i] = -(i + 1);
-                newBase[i] = - (i - 1);
+                newBase[i] = -(i - 1);
             }
             int prevLastFreeIndex = -base[0];
-            newCheck[prevLastFreeIndex] = - check.length;
+            newCheck[prevLastFreeIndex] = -check.length;
             newCheck[newCapacity - 1] = 0;
 
-            newBase[base.length] = - prevLastFreeIndex;
+            newBase[base.length] = -prevLastFreeIndex;
             newBase[0] = -(newCapacity - 1);
 
             this.check = newCheck;
@@ -388,13 +414,14 @@ public class DATAutomaton<V> implements Automaton<V> {
 
         /**
          * find free indexes for characters of state
+         *
          * @param state
          * @return the appropriate base address value, may be negative. Use Integer.MAX_VALUE to indicate failure.
          */
         private int findBaseValue(final State state) {
 
             Map<Character, State> childrenMap = state.getSuccess();
-            if(childrenMap.size() == 0) {
+            if (childrenMap.size() == 0) {
                 return 0;
             }
 
@@ -408,30 +435,32 @@ public class DATAutomaton<V> implements Automaton<V> {
 
             int[] diffs = new int[characters.length];
 
-            for(i = 1; i < characters.length; i++) {
+            for (i = 1; i < characters.length; i++) {
                 diffs[i] = characters[i] - characters[0];
             }
 
-            int freeIndex = - check[0];
+            int freeIndex = -check[0];
             while (freeIndex > 0) {
 
                 int maxNeededIndex = freeIndex + diffs[characters.length - 1];
-                if(maxNeededIndex >= check.length) {
+                if (maxNeededIndex >= check.length) {
                     resize(maxNeededIndex + 1);
-                } else if(maxNeededIndex < 0) { // overflow
+                } else if (maxNeededIndex < 0) { // overflow
                     throw new OutOfMemoryError();
                 }
 
                 for (i = characters.length - 1; i > 0; i--) {
                     int detectIndex = freeIndex + diffs[i];
-                    if(check[detectIndex] > 0) break;
+                    if (check[detectIndex] > 0) {
+                        break;
+                    }
                 }
 
-                if(i == 0) {
+                if (i == 0) {
                     return freeIndex - characters[0];
                 }
 
-                freeIndex = - check[freeIndex];
+                freeIndex = -check[freeIndex];
             }
 
             return Integer.MAX_VALUE;
@@ -449,20 +478,20 @@ public class DATAutomaton<V> implements Automaton<V> {
                 int ordinal = state.getOrdinal();
 
                 // 1. place outer index
-                final String keyword  = state.getKeyword();
-                if(keyword != null) {
+                final String keyword = state.getKeyword();
+                if (keyword != null) {
                     check[ordinal] = invertedIndex.get(keyword);
                 }
 
                 // 2. place failure pointer
                 State failure = state.getFailure();
-                if(failure != null) {
+                if (failure != null) {
                     base[ordinal + stateCount] = failure.getOrdinal();
                 }
 
                 // 3. place previous word pointer
                 State prevWordState = state.getPrevWordState();
-                if(prevWordState != null) {
+                if (prevWordState != null) {
                     check[ordinal + stateCount] = prevWordState.getOrdinal();
                 }
 
@@ -478,7 +507,7 @@ public class DATAutomaton<V> implements Automaton<V> {
 
         private void placeSuccess(State state) {
             int baseValue = findBaseValue(state);
-            if(baseValue == Integer.MAX_VALUE) {
+            if (baseValue == Integer.MAX_VALUE) {
                 throw new RuntimeException("No base value found for state " + state.getOrdinal());
             }
             // place base address
@@ -488,11 +517,11 @@ public class DATAutomaton<V> implements Automaton<V> {
             Map<Character, State> success = state.getSuccess();
             for (Map.Entry<Character, State> entry : success.entrySet()) {
                 int freeIndex = baseValue + entry.getKey();
-                int prevFreeIndex = - base[freeIndex];
-                int nextFreeIndex = - check[freeIndex];
+                int prevFreeIndex = -base[freeIndex];
+                int nextFreeIndex = -check[freeIndex];
 
-                check[prevFreeIndex] = - nextFreeIndex;
-                base[nextFreeIndex] = - prevFreeIndex;
+                check[prevFreeIndex] = -nextFreeIndex;
+                base[nextFreeIndex] = -prevFreeIndex;
 
                 base[freeIndex] = entry.getValue().getOrdinal();
                 check[freeIndex] = state.getOrdinal();

@@ -25,3 +25,6 @@ hs_err_pid*
 # Project management
 .idea
 target
+
+# kdiff3
+*.orig

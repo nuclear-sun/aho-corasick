@@ -1,9 +1,12 @@
-package org.sun.ahocorasick;
+package com.helipy.text.ahocorasick;
 
 import java.util.HashMap;
 import java.util.Map;
 
-class State {
+/**
+ * @author nuclear-sun
+ */
+public class State {
 
     private int ordinal;
 
@@ -19,39 +22,39 @@ class State {
         this.success = new HashMap<>();
     }
 
-    public void setOrdinal(int ordinal) {
-        this.ordinal = ordinal;
+    public String getKeyword() {
+        return keyword;
     }
 
     public void setKeyword(String keyword) {
         this.keyword = keyword;
     }
 
-    public String getKeyword() {
-        return keyword;
-    }
-
     public int getOrdinal() {
         return ordinal;
+    }
+
+    public void setOrdinal(int ordinal) {
+        this.ordinal = ordinal;
     }
 
     public Map<Character, State> getSuccess() {
         return this.success;
     }
 
-    public void setFailure(State failure) {
-        this.failure = failure;
-    }
-
     public State getFailure() {
         return this.failure;
     }
 
-    public void setPrevWordState(State prevWordState) {
-        this.prevWordState = prevWordState;
+    public void setFailure(State failure) {
+        this.failure = failure;
     }
 
     public State getPrevWordState() {
         return prevWordState;
+    }
+
+    public void setPrevWordState(State prevWordState) {
+        this.prevWordState = prevWordState;
     }
 }

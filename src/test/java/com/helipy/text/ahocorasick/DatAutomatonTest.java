@@ -1,11 +1,11 @@
-package org.sun.ahocorasick;
+package com.helipy.text.ahocorasick;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.List;
 
-public class DATAutomatonTest {
+public class DatAutomatonTest {
 
     class Person {
         final String name;
@@ -26,7 +26,7 @@ public class DATAutomatonTest {
     }
 
 
-    private DATAutomaton automaton;
+    private DatAutomaton automaton;
 
     @BeforeClass
     public void setUp() {
@@ -35,25 +35,25 @@ public class DATAutomatonTest {
 
     public void build() {
 
-        DATAutomaton.Builder builder = DATAutomaton.builder();
+        DatAutomaton.Builder builder = DatAutomaton.builder();
         builder.add("she")
                 .add("he")
                 .add("say");
-        DATAutomaton automaton = builder.build();
-        automaton.printStats(false);
+        DatAutomaton automaton = builder.build();
+        automaton.printStats(false, System.out);
 
         this.automaton = automaton;
     }
 
     public void build2() {
 
-        DATAutomaton.Builder<Person> builder = DATAutomaton.builder();
+        DatAutomaton.Builder<Person> builder = DatAutomaton.builder();
         builder.put("Jack", new Person("Jack", 12))
                 .put("Julia", new Person("Julia", 16))
                 .put("Jane", new Person("Jane", 18));
 
-        DATAutomaton<Person> automaton = builder.build();
-        automaton.printStats(false);
+        DatAutomaton<Person> automaton = builder.build();
+        automaton.printStats(false, System.out);
 
         this.automaton = automaton;
     }
@@ -72,6 +72,7 @@ public class DATAutomatonTest {
 
         class LowerCaseCS implements CharSequence {
             private final String text;
+
             public LowerCaseCS(String text) {
                 this.text = text;
             }
@@ -105,6 +106,7 @@ public class DATAutomatonTest {
         class SkipDotCS implements CharSequence {
 
             private final String text;
+
             public SkipDotCS(String text) {
                 this.text = text;
             }
@@ -144,7 +146,7 @@ public class DATAutomatonTest {
 
             @Override
             public boolean onMatch(int start, int end, String key, Person person) {
-                if(person.age == 16) {
+                if (person.age == 16) {
                     whoAges16 = person;
                     return false;      // stops parsing when found
                 }
