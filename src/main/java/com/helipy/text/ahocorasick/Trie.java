@@ -1,8 +1,14 @@
-package org.sun.ahocorasick;
+package com.helipy.text.ahocorasick;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
 
-class Trie {
+/**
+ * @author nuclear-sun
+ */
+public class Trie {
 
     private State root;
 
@@ -24,7 +30,7 @@ class Trie {
             char ch = keyword.charAt(i);
 
             State childState = currState.getSuccess().get(ch);
-            if(childState == null) {
+            if (childState == null) {
                 childState = new State();
                 currState.getSuccess().put(ch, childState);
 
@@ -69,7 +75,7 @@ class Trie {
                 boolean modified = false;
 
                 // set previous word pointer
-                if(!foundPrevWord && parentFailure.getKeyword() != null) {
+                if (!foundPrevWord && parentFailure.getKeyword() != null) {
                     parentState.setPrevWordState(parentFailure);
                     foundPrevWord = true;
                     modified = true;
@@ -77,15 +83,17 @@ class Trie {
 
                 // set failure pointer
                 Map<Character, State> failureChildren = parentFailure.getSuccess();
-                if(failureChildren == null || failureChildren.size() == 0) continue;
+                if (failureChildren == null || failureChildren.size() == 0) {
+                    continue;
+                }
 
                 for (Map.Entry<Character, State> entry : children.entrySet()) {
                     Character character = entry.getKey();
                     State childState = entry.getValue();
 
-                    State childFailure;
+                    State childFailure = failureChildren.get(character);
 
-                    if(childState.getFailure() == null && (childFailure = failureChildren.get(character)) != null) {
+                    if (childState.getFailure() == null && childFailure != null) {
                         childState.setFailure(childFailure);
                         resolvedChildCnt += 1;
                         modified = true;
@@ -94,14 +102,14 @@ class Trie {
                 }
 
                 // break loop if both tasks are done
-                if(modified && foundPrevWord && resolvedChildCnt == children.size()) {
+                if (modified && foundPrevWord && resolvedChildCnt == children.size()) {
                     break;
                 }
 
             }
 
             for (State childState : children.values()) {
-                if(childState.getFailure() == null) {
+                if (childState.getFailure() == null) {
                     childState.setFailure(root);
                 }
                 queue.offer(childState);

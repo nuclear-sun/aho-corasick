@@ -5,9 +5,28 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.sun</groupId>
-    <artifactId>ahocorasick</artifactId>
-    <version>1.0</version>
+    <groupId>com.helipy.text</groupId>
+    <artifactId>ahocorasick-doublearray</artifactId>
+    <version>1.0.0</version>
+
+    <url>https://github.com/nuclear-sun/aho-corasick</url>
+    <name>Aho-CoraSick algorithm for efficient string matching with double array optimization</name>
+    <description>
+        A double array optimized Aho-CoraSick algorithm, an efficient string matching against a large set of keywords
+    </description>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>scm:git://github.com/nuclear-sun/aho-corasick</url>
+        <connection>scm:git://https://github.com/nuclear-sun/aho-corasick</connection>
+    </scm>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -22,6 +41,12 @@
             <version>7.4.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>31.1-jre</version>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 
@@ -30,10 +55,103 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.6.0</version>
                 <configuration>
                     <source>8</source>
                     <target>8</target>
                 </configuration>
+            </plugin>
+            <!-- upload source as jar -->
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <attach>true</attach>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <configLocation>checkstyle.xml</configLocation>
+                    <suppressionsLocation>checkstyle-suppression.xml</suppressionsLocation>
+                    <includeResources>false</includeResources>
+                    <!--检查不通过是否需要阻塞编译-->
+                    <failOnViolation>true</failOnViolation>
+                    <violationSeverity>info</violationSeverity>
+                    <maxAllowedViolations>0</maxAllowedViolations>
+                    <consoleOutput>true</consoleOutput>
+                    <inputEncoding>UTF-8</inputEncoding>
+                    <linkXRef>false</linkXRef>
+                    <sourceDirectories>
+                        <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+                    </sourceDirectories>
+                    <!--skip属性表示是否跳过整个checkstyle检查-->
+                    <!--<skip>true</skip>-->
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.16.0</version>
+                <configuration>
+                    <rulesets>
+                        <ruleset>rulesets/java/ali-comment.xml</ruleset>
+                        <ruleset>rulesets/java/ali-concurrent.xml</ruleset>
+                        <ruleset>rulesets/java/ali-constant.xml</ruleset>
+                        <ruleset>rulesets/java/ali-exception.xml</ruleset>
+                        <ruleset>rulesets/java/ali-flowcontrol.xml</ruleset>
+                        <ruleset>rulesets/java/ali-naming.xml</ruleset>
+                        <!--<ruleset>rulesets/java/ali-oop.xml</ruleset>-->
+                        <ruleset>rulesets/java/ali-orm.xml</ruleset>
+                        <ruleset>rulesets/java/ali-other.xml</ruleset>
+                        <ruleset>rulesets/java/ali-set.xml</ruleset>
+                    </rulesets>
+                    <failurePriority>5</failurePriority>
+                    <failOnViolation>true</failOnViolation>
+                    <targetJdk>1.8</targetJdk>
+                    <verbose>true</verbose>
+                    <outputEncoding>UTF-8</outputEncoding>
+                    <printFailingErrors>true</printFailingErrors>
+                    <excludeRoots>
+                        <excludeRoot>target/generated-sources/</excludeRoot>
+                    </excludeRoots>
+                    <!--skip属性表示是否跳过整个pmd检查-->
+                    <!--<skip>true</skip>-->
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.alibaba.p3c</groupId>
+                        <artifactId>p3c-pmd</artifactId>
+                        <version>2.1.1</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

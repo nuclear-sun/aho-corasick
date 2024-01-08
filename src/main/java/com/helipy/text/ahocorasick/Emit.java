@@ -1,6 +1,11 @@
-package org.sun.ahocorasick;
+package com.helipy.text.ahocorasick;
 
 import java.util.Objects;
+
+/**
+ * @param <V> The related object type
+ * @author nuclear-sun
+ */
 
 public class Emit<V> implements Comparable<Emit<V>> {
     private final String keyword;
@@ -27,8 +32,12 @@ public class Emit<V> implements Comparable<Emit<V>> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Emit<?> emit = (Emit<?>) o;
         return start == emit.start && end == emit.end && keyword.equals(emit.keyword);
     }
@@ -38,6 +47,7 @@ public class Emit<V> implements Comparable<Emit<V>> {
         return Objects.hash(keyword, start, end);
     }
 
+    @Override
     public String toString() {
         String template = "[%d:%d]%s";
         String temp = String.format(template, start, end, keyword);

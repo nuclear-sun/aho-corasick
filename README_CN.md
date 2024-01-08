@@ -28,9 +28,9 @@ Automaton automaton = builder.build();
 如果需要对每个关键词关联一个对象, 例如一个 Float 的权重
 ```
 DATAutomaton.Builder<Float> builder = DATAutomaton.builder();
-builder.put("he", 0.5)
-       .put("she", 0.6)
-       .put("say", 0.4);
+builder.put("he", 0.5f)
+       .put("she", 0.6f)
+       .put("say", 0.4f);
 Automaton<Float> automaton = builder.build();
 ```
 也可以使用 `addAll`, `putAll` 一次添加一组关键词.

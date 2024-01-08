@@ -24,13 +24,13 @@ builder.add("he")
         .add("say");
 Automaton automaton = builder.build();
 ```
-If you want to attach each keyword with a generic object
+If you want to attach each keyword with a generic object, such as a Float weight
 ```
-DATAutomaton.Builder<Object> builder = DATAutomaton.builder();
-builder.put("he", obj1)
-       .put("she", obj2)
-       .put("say", obj3);
-Automaton<Object> automaton = builder.build();
+DATAutomaton.Builder<Float> builder = DATAutomaton.builder();
+builder.put("he", 0.5f)
+       .put("she", 0.6f)
+       .put("say", 0.4f);
+Automaton<Float> automaton = builder.build();
 ```
 In above two cases, `addAll` and `putAll` is also provided to support collections.
 
@@ -40,7 +40,20 @@ In above two cases, `addAll` and `putAll` is also provided to support collection
 ### 1. Generally collect all keywords encountered
 ```
 List<Emit<V>> list = automaton.parseText(text); 
+
+for (Emit<Void> emit : emitList) {
+    // print matched keyword and location in text
+    System.out.printf("%s %d %d%n", emit.getKeyword(), emit.getStart(), emit.getEnd());
+}
 ```
+
+if have attached a generic object for each keyword, such as a Float weight, the weight can fetch by Emit object.
+```
+List<Emit<Float>> emitList = automaton.parseText(text);
+for (Emit<Float> emit : emitList) {
+    // print matched keyword, location in text and attached weight
+    System.out.printf("%s %d %d %f%n", emit.getKeyword(), emit.getStart(), emit.getEnd(), emit.getValue());
+}
 
 ### 2. Uniform callback machenism
 
