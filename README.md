@@ -54,6 +54,7 @@ for (Emit<Float> emit : emitList) {
     // print matched keyword, location in text and attached weight
     System.out.printf("%s %d %d %f%n", emit.getKeyword(), emit.getStart(), emit.getEnd(), emit.getValue());
 }
+```
 
 ### 2. Uniform callback machenism
 
