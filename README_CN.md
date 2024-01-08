@@ -24,12 +24,13 @@ builder.add("he")
         .add("say");
 Automaton automaton = builder.build();
 ```
-如果需要对每个关键词关联一个对象
+
+如果需要对每个关键词关联一个对象,例如一个 Float 的权重
 ```
-DATAutomaton.Builder<Object> builder = DATAutomaton.builder();
-builder.put("he", obj1)
-       .put("she", obj2)
-       .put("say", obj3);
+DATAutomaton.Builder<Float> builder = DATAutomaton.builder();
+builder.put("he", 0.5)
+       .put("she", 0.6)
+       .put("say", 0.4);
 Automaton<Object> automaton = builder.build();
 ```
 也可以使用 `addAll`, `putAll` 一次添加一组关键词.
@@ -37,8 +38,23 @@ Automaton<Object> automaton = builder.build();
 ## 查询自动机
 
 ### 1. 收集所有命中的关键词
+查看命中了哪些关键词
 ```
-List<Emit<V>> list = automaton.parseText(text); 
+List<Emit<Void>> list = automaton.parseText(text);
+
+for (Emit<Void> emit : emitList) {
+    // 打印命中的关键词和在文本中的位置
+    System.out.printf("%s %d %d%n", emit.getKeyword(), emit.getStart(), emit.getEnd());
+}
+```
+
+如果给关键词关联了一个对象,例如一个 Float 的权重
+```
+List<Emit<Float>> emitList = automaton.parseText(text);
+for (Emit<Float> emit : emitList) {
+    // 打印命中的关键词,在文本中的位置,以及关联的权重
+    System.out.printf("%s %d %d %f%n", emit.getKeyword(), emit.getStart(), emit.getEnd(), emit.getValue());
+}
 ```
 
 ### 2. 为匹配命中配置回调机制
