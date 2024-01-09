@@ -12,21 +12,35 @@ Typically, an aho-corasick automaton is mainly a trie, whose nodes are modified 
 
 This implementation fuse all above elements into the double array, resulting excellent query performance, especially for large documents.
 
-However, the process of building such data structure is longer than implementations of linked nodes. Therefore it is suitable for scenario where build once, query all the time.
+However, the process of building such data structure (DAT) is longer than implementations of linked nodes. Therefore it is suitable for scenario where build once, query all the time.
 
 # Usage
-## Build the Automaton
+
+## import by maven
+
+```xml
+        <dependency>
+            <groupId>com.helipy.text</groupId>
+            <artifactId>ahocorasick-doublearray</artifactId>
+            <version>1.0.0</version>
+        </dependency>
 ```
+
+## Build the Automaton
+```java
+import com.helipy.text.ahocorasick.DatAutomaton;
+import com.helipy.text.ahocorasick.Emit;
+
 // build process
-DATAutomaton.Builder builder = DATAutomaton.builder();
-builder.add("he")
-        .add("she")
+DatAutomaton.Builder<Void> builder = DatAutomaton.<Void>builder();
+builder.add("she")
+        .add("he")
         .add("say");
-Automaton automaton = builder.build();
+DatAutomaton<Void> automaton = builder.build();
 ```
 If you want to attach each keyword with a generic object, such as a Float weight
-```
-DATAutomaton.Builder<Float> builder = DATAutomaton.builder();
+```java
+DatAutomaton.Builder<Float> builder = DatAutomaton.builder();
 builder.put("he", 0.5f)
        .put("she", 0.6f)
        .put("say", 0.4f);
@@ -39,7 +53,7 @@ In above two cases, `addAll` and `putAll` is also provided to support collection
 
 ### 1. Generally collect all keywords encountered
 ```
-List<Emit<V>> list = automaton.parseText(text); 
+List<Emit<Void>> list = automaton.parseText(text); 
 
 for (Emit<Void> emit : emitList) {
     // print matched keyword and location in text
@@ -162,12 +176,12 @@ automaton.parseText(new LowerCaseCS(text));
 ### Thread Interruption
 It is sometimes necessary to stop parsing even though the process has not complete yet, such as canceled query, shutdown:
 ```java
-DATAutomaton.Builder builder = DATAutomaton.builder();
+DatAutomaton.Builder<Void> builder = DatAutomaton.<>builder();
 builder.setInterruptable(true)
         .add("he")
         .add("she")
         .add("say");
-Automaton automaton = builder.build();
+Automaton<Void> automaton = builder.build();
 ```
 The `setInterruptable` method indicates whether this automaton listens on thread interruption:
 if set true(default false), the automaton will stop parsing on thread interrupted(thread interruption status not reset).

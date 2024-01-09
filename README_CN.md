@@ -15,19 +15,31 @@
 然而,构造这个数据结构（双数组）的过程比链接表要慢,因此,这个实现更适用于一次构建,多次查询的场景.
 
 # 用法
-## 构造自动机
+## maven 引用
+
+```xml
+        <dependency>
+            <groupId>com.helipy.text</groupId>
+            <artifactId>ahocorasick-doublearray</artifactId>
+            <version>1.0.0</version>
+        </dependency>
 ```
+
+## 构造自动机
+```java
+import com.helipy.text.ahocorasick.DatAutomaton;
+import com.helipy.text.ahocorasick.Emit;
 // 构造过程
-DATAutomaton.Builder builder = DATAutomaton.builder();
+DatAutomaton.Builder<Void> builder = DatAutomaton.<>builder();
 builder.add("he")
         .add("she")
         .add("say");
-Automaton automaton = builder.build();
+Automaton<Void> automaton = builder.build();
 ```
 
 如果需要对每个关键词关联一个对象, 例如一个 Float 的权重
-```
-DATAutomaton.Builder<Float> builder = DATAutomaton.builder();
+```java
+DatAutomaton.Builder<Float> builder = DatAutomaton.builder();
 builder.put("he", 0.5f)
        .put("she", 0.6f)
        .put("say", 0.4f);
@@ -39,7 +51,7 @@ Automaton<Float> automaton = builder.build();
 
 ### 1. 收集所有命中的关键词
 ```
-List<Emit<V>> list = automaton.parseText(text);
+List<Emit<Void>> list = automaton.parseText(text);
 
 for (Emit<Void> emit : emitList) {
     // 打印命中的关键词和在文本中的位置
@@ -162,12 +174,12 @@ automaton.parseText(new LowerCaseCS(text));
 ### 线程中断
 有时中断查询过程是有必要的，如超时取消，关机等，可以按照如下方式设置：
 ```java
-DATAutomaton.Builder builder = DATAutomaton.builder();
+DatAutomaton.Builder<Void> builder = DatAutomaton.<void>builder();
 builder.setInterruptable(true)  // 设置可以被中断
         .add("he")
         .add("she")
         .add("say");
-Automaton automaton = builder.build();
+Automaton<Void> automaton = builder.build();
 ```
 `setInterruptable` 方法表示该自动机是否可以监听线程中断信号。如果设置为 true（默认为 false）, 当线程被中断时会停止查询（线程中断状态会被保留）。
 在另一个线程中，可以这样中断该自动机：
