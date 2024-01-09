@@ -12,7 +12,7 @@ Typically, an aho-corasick automaton is mainly a trie, whose nodes are modified 
 
 This implementation fuse all above elements into the double array, resulting excellent query performance, especially for large documents.
 
-However, the process of building such data structure is longer than implementations of linked nodes. Therefore it is suitable for scenario where build once, query all the time.
+However, the process of building such data structure (DAT) is longer than implementations of linked nodes. Therefore it is suitable for scenario where build once, query all the time.
 
 # Usage
 
@@ -53,7 +53,7 @@ In above two cases, `addAll` and `putAll` is also provided to support collection
 
 ### 1. Generally collect all keywords encountered
 ```
-List<Emit<V>> list = automaton.parseText(text); 
+List<Emit<Void>> list = automaton.parseText(text); 
 
 for (Emit<Void> emit : emitList) {
     // print matched keyword and location in text

@@ -5,18 +5,30 @@
 * https://www.linux.thai.net/~thep/datrie/
 * https://github.com/robert-bor/aho-corasick
 
-通常,一个 AC自动机是一个 trie 结构,节点状态由下面几种结构修改
+通常,一个 AC自动机是一个 trie 结构, 但是状态节点更加丰富，每个状态节点状态由下面几种结构构成：
 1. goto 表(goto table)
 2. 失败指针(failure pointer)
 3. 输出表(output table)
 
-这个实现在双数组上重用了上面所有的元素,达到了卓越的查询性能,尤其是对大文件的查询.
+这个实现是引用1中双数组前缀树（DAT）的拓展，将AC自动机的上面3种元素都编码进两个数组中，最终达到了非常优秀的性能，对于长文本尤其明显。
 
-然而,构造这个数据结构(Trie)的过程比链接表要慢,因此,这个实现更适用于一次构建,多次查询的场景.
+然而,构造这个数据结构（双数组）的过程比链接表要慢,因此,这个实现更适用于一次构建,多次查询的场景.
 
 # 用法
-## 构造自动机
+## maven 引用
+
+```xml
+        <dependency>
+            <groupId>com.helipy.text</groupId>
+            <artifactId>ahocorasick-doublearray</artifactId>
+            <version>1.0.0</version>
+        </dependency>
 ```
+
+## 构造自动机
+```java
+import com.helipy.text.ahocorasick.DatAutomaton;
+import com.helipy.text.ahocorasick.Emit;
 // 构造过程
 DatAutomaton.Builder<Void> builder = DatAutomaton.<>builder();
 builder.add("he")
@@ -26,7 +38,7 @@ Automaton<Void> automaton = builder.build();
 ```
 
 如果需要对每个关键词关联一个对象, 例如一个 Float 的权重
-```
+```java
 DatAutomaton.Builder<Float> builder = DatAutomaton.builder();
 builder.put("he", 0.5f)
        .put("she", 0.6f)
@@ -39,7 +51,7 @@ Automaton<Float> automaton = builder.build();
 
 ### 1. 收集所有命中的关键词
 ```
-List<Emit<V>> list = automaton.parseText(text);
+List<Emit<Void>> list = automaton.parseText(text);
 
 for (Emit<Void> emit : emitList) {
     // 打印命中的关键词和在文本中的位置
