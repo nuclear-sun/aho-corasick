@@ -23,6 +23,19 @@
         </license>
     </licenses>
 
+    <developers>
+        <developer>
+            <id>nuclear_sun</id>
+            <name>Sun Rui</name>
+            <email>nuclear_sun@163.com</email>
+        </developer>
+        <developer>
+            <id>tain_feng_912</id>
+            <name>Wang ChuangFeng</name>
+            <email>tain_feng_912@163.com</email>
+        </developer>
+    </developers>
+
     <scm>
         <url>scm:git://github.com/nuclear-sun/aho-corasick</url>
         <connection>scm:git://https://github.com/nuclear-sun/aho-corasick</connection>
