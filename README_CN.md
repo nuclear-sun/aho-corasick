@@ -71,6 +71,8 @@ for (Emit<Float> emit : emitList) {
 ### 2. 为匹配命中配置回调机制
 
 ```
+import com.helipy.text.ahocorasick.MatchHandler;
+
 MatchHandler<V> handler = new MatchHandler<V> {
   boolean onMatch(int start, int end, String key, V value) {
     // 处理逻辑
@@ -78,12 +80,14 @@ MatchHandler<V> handler = new MatchHandler<V> {
     return true;   // 如果希望命中后停止解析,请 return false
   }
 };
-automaton.parseText(text, handler);
+List<Emit<V>> emitList = automaton.parseText(text, handler);
 ```
 
 ### 3. 中途停止解析
 如果希望中途停止解析,例如,测试一个输入文档是否包含 "demon",这并不需要遍历整个文档,只需要在发现 "demon"时停止.
 ```
+import com.helipy.text.ahocorasick.MatchHandler;
+
 MatchHandler<V> handler = new MatchHandler<V> {
 
   boolean hasDemon = false;
@@ -96,7 +100,7 @@ MatchHandler<V> handler = new MatchHandler<V> {
     return true;
   }
 };
-automaton.parseText(document, handler); 
+List<Emit<V>> emitList = automaton.parseText(document, handler); 
 ```
 当 handler 返回 false, parse 函数将在找到这个关键词后立即返回.
 
