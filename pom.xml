@@ -7,7 +7,7 @@
 
     <groupId>com.helipy.text</groupId>
     <artifactId>ahocorasick-doublearray</artifactId>
-    <version>1.1.0</version>
+    <version>1.0.0</version>
 
     <url>https://github.com/nuclear-sun/aho-corasick</url>
     <name>Aho-CoraSick algorithm for efficient string matching with double array optimization</name>
