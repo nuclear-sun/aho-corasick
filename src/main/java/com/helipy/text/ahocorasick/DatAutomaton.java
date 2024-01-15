@@ -116,7 +116,6 @@ public final class DatAutomaton<V> implements Automaton<V> {
 
         return collector;
     }
-    // CHECKSTYLE:ON
 
     /**
      * // CHECKSTYLE:OFF
@@ -124,9 +123,8 @@ public final class DatAutomaton<V> implements Automaton<V> {
      * @param text    text to scan
      * @param handler how to handle matched keyword
      */
-    @Override
     @SuppressWarnings("checkstyle:ReturnCount")
-    public void parseText(CharSequence text, MatchHandler<V> handler) {
+    private void parseTextInner(CharSequence text, MatchHandler<V> handler) {
 
         if (text == null || handler == null) {
             return;
@@ -192,8 +190,8 @@ public final class DatAutomaton<V> implements Automaton<V> {
                 return;
             }
         }
-
     }
+    // CHECKSTYLE:ON
 
     @Override
     public List<Emit<V>> parseText(CharSequence text) {
@@ -209,7 +207,23 @@ public final class DatAutomaton<V> implements Automaton<V> {
             }
         };
 
-        parseText(text, listener);
+        parseTextInner(text, listener);
+
+        return results;
+    }
+
+    @Override
+    public List<Emit<V>> parseText(CharSequence text, MatchHandler<V> handler) {
+        List<Emit<V>> results = new LinkedList<>();
+        MatchHandler<V> listener = new MatchHandler<V>() {
+            @Override
+            public boolean onMatch(int start, int end, String key, V value) {
+                Emit<V> emit = new Emit<>(key, start, end, value);
+                results.add(emit);
+                return handler.onMatch(start, end, key, value);
+            }
+        };
+        parseTextInner(text, listener);
 
         return results;
     }
