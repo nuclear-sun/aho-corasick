@@ -22,7 +22,7 @@ However, the process of building such data structure (DAT) is longer than implem
         <dependency>
             <groupId>com.helipy.text</groupId>
             <artifactId>ahocorasick-doublearray</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
         </dependency>
 ```
 
@@ -44,6 +44,10 @@ DatAutomaton.Builder<Float> builder = DatAutomaton.builder();
 builder.put("he", 0.5f)
        .put("she", 0.6f)
        .put("say", 0.4f);
+
+// get the associated object (since 1.1.0)
+Float weight = builder.get("he");
+
 Automaton<Float> automaton = builder.build();
 ```
 In above two cases, `addAll` and `putAll` is also provided to support collections.
