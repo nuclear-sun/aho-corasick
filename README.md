@@ -73,6 +73,8 @@ for (Emit<Float> emit : emitList) {
 ### 2. Uniform callback machenism
 
 ```
+import com.helipy.text.ahocorasick.MatchHandler;
+
 MatchHandler<V> handler = new MatchHandler<V> {
   boolean onMatch(int start, int end, String key, V value) {
     // do something
@@ -80,12 +82,14 @@ MatchHandler<V> handler = new MatchHandler<V> {
     return true;   // return false if you want to stop parseing half way
   }
 };
-automaton.parseText(text, handler);
+List<Emit<V>> emitList = automaton.parseText(text, handler);
 ```
 
 ### 3. Stop parsing half way
 If you want to stop parsing half way, say, test if a input document contains the word "demon" or not, and unnecessary to traverse the whole document, you can
 ```
+import com.helipy.text.ahocorasick.MatchHandler;
+
 MatchHandler<V> handler = new MatchHandler<V> {
 
   boolean hasDemon = false;
@@ -98,7 +102,7 @@ MatchHandler<V> handler = new MatchHandler<V> {
     return true;
   }
 };
-automaton.parseText(document, handler); 
+List<Emit<V>> emitList = automaton.parseText(document, handler); 
 ```
 When the handler returns false, the parse function will find it and return immediately.
 

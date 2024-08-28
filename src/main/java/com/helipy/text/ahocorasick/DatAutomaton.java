@@ -192,7 +192,6 @@ public final class DatAutomaton<V> implements Automaton<V> {
                 return;
             }
         }
-
     }
 
     @Override
@@ -305,6 +304,10 @@ public final class DatAutomaton<V> implements Automaton<V> {
         public Builder<V> putAll(Map<String, ? extends V> data) {
             this.dataMap.putAll(data);
             return this;
+        }
+
+        public V get(String key) {
+            return this.dataMap.get(key);
         }
 
         public Builder<V> add(String key) {

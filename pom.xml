@@ -7,7 +7,7 @@
 
     <groupId>com.helipy.text</groupId>
     <artifactId>ahocorasick-doublearray</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 
     <url>https://github.com/nuclear-sun/aho-corasick</url>
     <name>Aho-CoraSick algorithm for efficient string matching with double array optimization</name>
@@ -51,13 +51,19 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>7.4.0</version>
+            <version>7.10.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>31.1-jre</version>
+            <version>33.3.0-jre</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+            <version>2.0.52</version>
             <scope>test</scope>
         </dependency>
 
