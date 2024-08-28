@@ -21,7 +21,7 @@
         <dependency>
             <groupId>com.helipy.text</groupId>
             <artifactId>ahocorasick-doublearray</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
         </dependency>
 ```
 
@@ -43,6 +43,10 @@ DatAutomaton.Builder<Float> builder = DatAutomaton.builder();
 builder.put("he", 0.5f)
        .put("she", 0.6f)
        .put("say", 0.4f);
+
+// 获取关联的对象 (since 1.1.0)
+Float weight = builder.get("he");
+
 Automaton<Float> automaton = builder.build();
 ```
 也可以使用 `addAll`, `putAll` 一次添加一组关键词.
