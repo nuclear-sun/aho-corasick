@@ -116,6 +116,7 @@ public final class DatAutomaton<V> implements Automaton<V> {
 
         return collector;
     }
+    // CHECKSTYLE:ON
 
     /**
      * // CHECKSTYLE:OFF
@@ -191,8 +192,8 @@ public final class DatAutomaton<V> implements Automaton<V> {
                 return;
             }
         }
+
     }
-    // CHECKSTYLE:ON
 
     @Override
     public List<Emit<V>> parseText(CharSequence text) {
@@ -304,6 +305,10 @@ public final class DatAutomaton<V> implements Automaton<V> {
         public Builder<V> putAll(Map<String, ? extends V> data) {
             this.dataMap.putAll(data);
             return this;
+        }
+
+        public V get(String key) {
+            return this.dataMap.get(key);
         }
 
         public Builder<V> add(String key) {

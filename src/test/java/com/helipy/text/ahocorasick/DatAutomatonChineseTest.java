@@ -1,10 +1,15 @@
 package com.helipy.text.ahocorasick;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.testng.annotations.Test;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Pack:       com.kanzhun.fc.common.text.ahocorasick
@@ -81,6 +86,75 @@ public class DatAutomatonChineseTest {
         for (Emit<Void> emit : results) {
             System.out.printf("%s %d %d%n", emit.getKeyword(), emit.getStart(), emit.getEnd());
         }
+        /* output:
+         * 互联网 133 136
+         */
+    }
 
+    @Test
+    public void parseTextTest4() {
+        String wordDict1 = "上海虹桥\t{\"province\": \"上海\", \"city\": \"上海\", \"abroad\": \"0\", \"airportCode\": \"SHA\", \"country\": \"中国\"}\n" +
+                "上海虹桥机场\t{\"province\": \"上海\", \"city\": \"上海\", \"abroad\": \"0\", \"airportCode\": \"SHA\", \"country\": \"中国\"}\n" +
+                "阜阳机场\t{\"province\": \"安徽\", \"city\": \"阜阳\", \"abroad\": \"0\", \"airportCode\": \"FUG\", \"country\": \"中国\"}\n" +
+                "邯郸机场\t{\"province\": \"河北\", \"city\": \"邯郸\", \"abroad\": \"0\", \"airportCode\": \"HDG\", \"country\": \"中国\"}\n" +
+                "张家界机场\t{\"province\": \"湖南\", \"city\": \"张家界\", \"abroad\": \"0\", \"airportCode\": \"DYG\", \"country\": \"中国\"}\n" +
+                "固原六盘山机场\t{\"province\": \"宁夏\", \"city\": \"固原\", \"abroad\": \"0\", \"airportCode\": \"GYU\", \"country\": \"中国\"}\n" +
+                "惠州惠东机场\t{\"province\": \"广东\", \"city\": \"惠州\", \"abroad\": \"0\", \"airportCode\": \"HUZ\", \"country\": \"中国\"}\n" +
+                "舟山普陀山机场\t{\"province\": \"浙江\", \"city\": \"舟山\", \"abroad\": \"0\", \"airportCode\": \"HSN\", \"country\": \"中国\"}\n" +
+                "庐山机场\t{\"province\": \"江西\", \"city\": \"庐山\", \"abroad\": \"0\", \"airportCode\": \"LUZ\", \"country\": \"中国\"}\n" +
+                "路桥机场\t{\"province\": \"浙江\", \"city\": \"台州\", \"abroad\": \"0\", \"airportCode\": \"HYN\", \"country\": \"中国\"}\n" +
+                "永强机场\t{\"province\": \"浙江\", \"city\": \"温州\", \"abroad\": \"0\", \"airportCode\": \"WNZ\", \"country\": \"中国\"}";
+        String wordDict2 = "上海\t{\"province\": \"上海\", \"city\": \"上海\", \"lgt_baidu\": \"121.462096\", \"name\": \"上海\", \"district\": \"闸北区\", \"city_or_subcity\": \"1\", \"lat_baidu\": \"31.256071 \"}\n" +
+                "上海站\t{\"province\": \"上海\", \"city\": \"上海\", \"lgt_baidu\": \"121.462096\", \"name\": \"上海\", \"district\": \"闸北区\", \"city_or_subcity\": \"1\", \"lat_baidu\": \"31.256071 \"}\n" +
+                "上海南\t{\"province\": \"上海\", \"city\": \"上海\", \"lgt_baidu\": \"121.435774\", \"name\": \"上海南\", \"district\": \"徐汇区\", \"city_or_subcity\": \"1\", \"lat_baidu\": \"31.159523 \"}\n" +
+                "上海南站\t{\"province\": \"上海\", \"city\": \"上海\", \"lgt_baidu\": \"121.435774\", \"name\": \"上海南\", \"district\": \"徐汇区\", \"city_or_subcity\": \"1\", \"lat_baidu\": \"31.159523 \"}\n" +
+                "上海虹桥\t{\"province\": \"上海\", \"city\": \"上海\", \"lgt_baidu\": \"121.326321\", \"name\": \"上海虹桥\", \"district\": \"闵行区\", \"city_or_subcity\": \"1\", \"lat_baidu\": \"31.200456 \"}\n" +
+                "上海虹桥站\t{\"province\": \"上海\", \"city\": \"上海\", \"lgt_baidu\": \"121.326321\", \"name\": \"上海虹桥\", \"district\": \"闵行区\", \"city_or_subcity\": \"1\", \"lat_baidu\": \"31.200456 \"}\n" +
+                "上海西\t{\"province\": \"上海\", \"city\": \"上海\", \"lgt_baidu\": \"121.409451\", \"name\": \"上海西\", \"district\": \"普陀区\", \"city_or_subcity\": \"1\", \"lat_baidu\": \"31.268828 \"}\n" +
+                "上海西站\t{\"province\": \"上海\", \"city\": \"上海\", \"lgt_baidu\": \"121.409451\", \"name\": \"上海西\", \"district\": \"普陀区\", \"city_or_subcity\": \"1\", \"lat_baidu\": \"31.268828 \"}\n" +
+                "天津北\t{\"province\": \"天津\", \"city\": \"天津\", \"lgt_baidu\": \"117.215953\", \"name\": \"天津北\", \"district\": \"河北区\", \"city_or_subcity\": \"1\", \"lat_baidu\": \"39.172530 \"}";
+
+        DatAutomaton.Builder<Map<String, JSONObject>> builder = DatAutomaton.<Map<String, List<JSONObject>>>builder();
+
+        for (String line : Splitter.on("\n").split(wordDict1)) {
+            List<String> pieces = Splitter.on("\t").splitToList(line);
+            String word = pieces.get(0);
+            JSONObject jsonObject = JSON.parseObject(pieces.get(1));
+            Map<String, JSONObject> obj = builder.get(word);
+            if (obj == null) {
+                Map<String, JSONObject> newMap = Maps.newHashMap();
+                newMap.put("airport", jsonObject);
+                builder.put(word, newMap);
+            } else {
+                obj.put("airport", jsonObject);
+            }
+        }
+
+        for (String line : Splitter.on("\n").split(wordDict2)) {
+            List<String> pieces = Splitter.on("\t").splitToList(line);
+            String word = pieces.get(0);
+            JSONObject jsonObject = JSON.parseObject(pieces.get(1));
+            Map<String, JSONObject> obj = builder.get(word);
+            if (obj == null) {
+                Map<String, JSONObject> newMap = Maps.newHashMap();
+                newMap.put("trainStation", jsonObject);
+                builder.put(word, newMap);
+            } else {
+                obj.put("trainStation", jsonObject);
+            }
+        }
+
+        String text = "我想去上海虹桥,怎么走?";
+        DatAutomaton<Map<String, JSONObject>> automaton = builder.build();
+        List<Emit<Map<String, JSONObject>>> emitList = automaton.parseText(text);
+
+        for (Emit<Map<String, JSONObject>> emit : emitList) {
+            System.out.printf("word:%s, start:%d, end:%d, obj:%s%n",
+                    emit.getKeyword(), emit.getStart(), emit.getEnd(), JSON.toJSONString(emit.getValue()));
+        }
+        /* output:
+         * word:上海, start:3, end:5, obj:{"trainStation":{"province":"上海","city":"上海","lgt_baidu":"121.462096","name":"上海","district":"闸北区","city_or_subcity":"1","lat_baidu":"31.256071 "}}
+         * word:上海虹桥, start:3, end:7, obj:{"trainStation":{"province":"上海","city":"上海","lgt_baidu":"121.326321","name":"上海虹桥","district":"闵行区","city_or_subcity":"1","lat_baidu":"31.200456 "},"airport":{"province":"上海","city":"上海","abroad":"0","airportCode":"SHA","country":"中国"}}
+         * */
     }
 }
