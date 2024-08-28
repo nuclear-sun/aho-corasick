@@ -192,7 +192,6 @@ public final class DatAutomaton<V> implements Automaton<V> {
                 return;
             }
         }
-
     }
 
     @Override
